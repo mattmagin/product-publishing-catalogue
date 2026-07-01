@@ -1,5 +1,6 @@
 services:
   api:
+    container_name: publishing-catalogue-api
     build:
       context: ./apps/api
       dockerfile: Dockerfile.dev
@@ -22,6 +23,7 @@ services:
     tty: true
 
   db:
+    container_name: publishing-catalogue-db
     image: postgres:18
     environment:
       POSTGRES_USER: postgres
