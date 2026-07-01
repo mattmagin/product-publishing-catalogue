@@ -1,0 +1,57 @@
+version: "3"
+
+tasks:
+  api:build:
+    desc: Build the Rails API development image
+    cmds:
+      - docker compose build api
+
+  api:setup:
+    desc: Prepare the Rails API development and test databases
+    cmds:
+      - docker compose run --rm api bin/rails db:prepare
+
+  api:dev:
+    desc: Start the Rails API with PostgreSQL
+    cmds:
+      - docker compose up api
+
+  api:test:
+    desc: Run the Rails API test suite
+    cmds:
+      - docker compose run --rm -e RAILS_ENV=test api bin/rails test
+
+  api:console:
+    desc: Open a Rails console in the API container
+    cmds:
+      - docker compose run --rm api bin/rails console
+
+  api:shell:
+    desc: Open a shell in the API container
+    cmds:
+      - docker compose run --rm api bash
+
+  api:routes:
+    desc: List Rails API routes
+    cmds:
+      - docker compose run --rm api bin/rails routes
+
+  api:db:migrate:
+    desc: Run Rails API database migrations
+    cmds:
+      - docker compose run --rm api bin/rails db:migrate
+
+  api:db:reset:
+    desc: Reset the Rails API development database
+    cmds:
+      - docker compose run --rm api bin/rails db:reset
+
+  api:logs:
+    desc: Follow Rails API logs
+    cmds:
+      - docker compose logs -f api
+
+  api:stop:
+    desc: Stop API development containers
+    cmds:
+      - docker compose stop api db
