@@ -6,6 +6,8 @@
     "dev": "pnpm -r --if-present dev",
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
+    "format": "pnpm -r --if-present format",
+    "format:check": "pnpm -r --if-present format:check",
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "api:build": "docker compose build api",
@@ -17,6 +19,8 @@
     "frontend:dev": "pnpm --filter product-publishing-frontend dev",
     "frontend:build": "pnpm --filter product-publishing-frontend build",
     "frontend:preview": "pnpm --filter product-publishing-frontend preview",
+    "frontend:format": "pnpm --filter product-publishing-frontend format",
+    "frontend:format:check": "pnpm --filter product-publishing-frontend format:check",
     "frontend:lint": "pnpm --filter product-publishing-frontend lint"
   }
 }

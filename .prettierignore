@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+.mf
+
+apps/frontend/dist
+apps/frontend/.mf

@@ -6,8 +6,7 @@
   box-sizing: border-box;
   background:
     linear-gradient(135deg, rgba(20, 184, 166, 0.12), transparent 38%),
-    linear-gradient(315deg, rgba(245, 158, 11, 0.12), transparent 32%),
-    #f8fafc;
+    linear-gradient(315deg, rgba(245, 158, 11, 0.12), transparent 32%), #f8fafc;
 }
 
 .remote-panel {

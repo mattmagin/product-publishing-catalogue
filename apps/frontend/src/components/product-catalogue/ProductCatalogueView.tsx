@@ -1,13 +1,8 @@
+import { Splitter } from '@ark-ui/react/splitter'
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
-import {
-  useProductsStore,
-  type Product,
-} from '../../store/products'
-import {
-  createHistoryEntry,
-  formatScheduleValue,
-} from './catalogueFormatters'
+import { useProductsStore, type Product } from '../../store/products'
+import { createHistoryEntry, formatScheduleValue } from './catalogueFormatters'
 import { ProductDetails } from './ProductDetails'
 import { ProductFilters, type StatusFilter } from './ProductFilters'
 import { ProductListTable } from './ProductListTable'
@@ -93,8 +88,14 @@ export function ProductCatalogueView() {
 
   return (
     <Shell>
-      <Content>
-        <div>
+      <Content
+        defaultSize={[68, 32]}
+        panels={[
+          { id: 'catalogue', minSize: 48 },
+          { id: 'details', minSize: 28 },
+        ]}
+      >
+        <CataloguePanel id="catalogue">
           <ProductFilters
             query={query}
             statusFilter={statusFilter}
@@ -104,21 +105,32 @@ export function ProductCatalogueView() {
           <ProductListTable
             products={filteredProducts}
             selectedProductId={selectedProduct.id}
-            onProductSelect={(product: Product) => setSelectedProductId(product.id)}
+            onProductSelect={(product: Product) =>
+              setSelectedProductId(product.id)
+            }
           />
-        </div>
+        </CataloguePanel>
 
-        <ProductDetails
-          product={selectedProduct}
-          scheduleDate={scheduleDate}
-          scheduleTime={scheduleTime}
-          onPublish={publishSelectedProduct}
-          onUnpublish={unpublishSelectedProduct}
-          onScheduleDateChange={setScheduleDate}
-          onScheduleTimeChange={setScheduleTime}
-          onSchedule={scheduleSelectedProduct}
-          onCancelScheduledPublish={cancelScheduledProductPublish}
-        />
+        <ResizeTrigger
+          id="catalogue:details"
+          aria-label="Resize product panels"
+        >
+          <Splitter.ResizeTriggerIndicator />
+        </ResizeTrigger>
+
+        <DetailsPanel id="details">
+          <ProductDetails
+            product={selectedProduct}
+            scheduleDate={scheduleDate}
+            scheduleTime={scheduleTime}
+            onPublish={publishSelectedProduct}
+            onUnpublish={unpublishSelectedProduct}
+            onScheduleDateChange={setScheduleDate}
+            onScheduleTimeChange={setScheduleTime}
+            onSchedule={scheduleSelectedProduct}
+            onCancelScheduledPublish={cancelScheduledProductPublish}
+          />
+        </DetailsPanel>
       </Content>
     </Shell>
   )
@@ -132,14 +144,73 @@ const Shell = styled.main`
   color: #111827;
 `
 
-const Content = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  gap: 16px;
+const Content = styled(Splitter.Root)`
+  --splitter-border-color: #d9dee8;
+  --splitter-handle-color: #98a2b3;
+  --splitter-handle-active-color: #2684ff;
+  --splitter-handle-size: 28px;
+
+  display: flex;
+  align-items: stretch;
   max-width: 1440px;
+  min-height: 0;
   margin: 0 auto;
 
   @media (max-width: 1100px) {
-    grid-template-columns: 1fr;
+    display: grid;
+    gap: 16px;
+  }
+`
+
+const CataloguePanel = styled(Splitter.Panel)`
+  min-width: 0;
+`
+
+const DetailsPanel = styled(Splitter.Panel)`
+  min-width: 0;
+`
+
+const ResizeTrigger = styled(Splitter.ResizeTrigger)`
+  position: relative;
+  display: grid;
+  flex: 0 0 16px;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  outline: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: 1px;
+    background: var(--splitter-border-color);
+  }
+
+  [data-part='resize-trigger-indicator'] {
+    position: relative;
+    width: 4px;
+    height: var(--splitter-handle-size);
+    border-radius: 999px;
+    background: var(--splitter-handle-color);
+    z-index: 1;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &[data-dragging] {
+    --splitter-border-color: rgba(38, 132, 255, 0.42);
+    --splitter-handle-color: var(--splitter-handle-active-color);
+  }
+
+  &:focus-visible [data-part='resize-trigger-indicator'] {
+    outline: 2px solid rgba(38, 132, 255, 0.28);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 1100px) {
+    display: none;
   }
 `

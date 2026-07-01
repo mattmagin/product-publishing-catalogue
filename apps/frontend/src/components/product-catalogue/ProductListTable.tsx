@@ -1,8 +1,6 @@
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import DataTable, {
-  type DataTableColumn,
-} from '../../components/ui/DataTable'
+import DataTable, { type DataTableColumn } from '../../components/ui/DataTable'
 import type { Product } from '../../store/products'
 import { formatPrice } from './catalogueFormatters'
 import { ProductStatusBadge } from './ProductStatusBadge'

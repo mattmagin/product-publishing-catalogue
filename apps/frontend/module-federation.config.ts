@@ -10,6 +10,7 @@ export default createModuleFederationConfig({
   },
   exposes: {
     './App': './src/App.tsx',
+    './App2': './src/App2.tsx',
   },
   shared: {
     react: {
