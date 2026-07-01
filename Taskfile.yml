@@ -14,7 +14,7 @@ tasks:
   api:dev:
     desc: Start the Rails API with PostgreSQL
     cmds:
-      - docker compose up api
+      - docker compose up api -d
 
   api:test:
     desc: Run the Rails API test suite
@@ -55,3 +55,23 @@ tasks:
     desc: Stop API development containers
     cmds:
       - docker compose stop api db
+
+  frontend:dev:
+    desc: Start the Vite microfrontend dev server
+    cmds:
+      - pnpm --filter product-publishing-frontend dev
+
+  frontend:build:
+    desc: Build the Vite microfrontend remote
+    cmds:
+      - pnpm --filter product-publishing-frontend build
+
+  frontend:preview:
+    desc: Preview the built Vite microfrontend remote
+    cmds:
+      - pnpm --filter product-publishing-frontend preview
+
+  frontend:lint:
+    desc: Lint the Vite microfrontend
+    cmds:
+      - pnpm --filter product-publishing-frontend lint
