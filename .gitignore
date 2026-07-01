@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# pnpm
+pnpm-debug.log*
+
+# Rails
+/apps/api/.bundle/
+/apps/api/log/*
+!/apps/api/log/.keep
+/apps/api/tmp/*
+!/apps/api/tmp/.keep
+/apps/api/storage/*
+!/apps/api/storage/.keep
+/apps/api/public/assets/
+/apps/api/public/packs/
+/apps/api/coverage/
+
+# Vite / frontend builds
+/apps/web/dist/
+/apps/web/.vite/
+/apps/web/coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test and cache output
+coverage/
+.cache/
+tmp/
