@@ -1,6 +1,12 @@
 version: "3"
 
 tasks:
+  dev:
+    desc: Start the development environment (Rails API + Postgres + Vite microfrontend)
+    cmds:
+      - docker compose up -d
+      - pnpm frontend:dev
+
   api:build:
     desc: Build the Rails API development image
     cmds:
