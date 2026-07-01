@@ -13,6 +13,10 @@
     "api:setup": "docker compose run --rm api bin/rails db:prepare",
     "api:test": "docker compose run --rm -e RAILS_ENV=test api bin/rails test",
     "api:console": "docker compose run --rm api bin/rails console",
-    "api:shell": "docker compose run --rm api bash"
+    "api:shell": "docker compose run --rm api bash",
+    "frontend:dev": "pnpm --filter product-publishing-frontend dev",
+    "frontend:build": "pnpm --filter product-publishing-frontend build",
+    "frontend:preview": "pnpm --filter product-publishing-frontend preview",
+    "frontend:lint": "pnpm --filter product-publishing-frontend lint"
   }
 }
