@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { Box, Text } from '@chakra-ui/react'
+import { LuHistory, LuLayoutDashboard, LuStore } from 'react-icons/lu'
+import type { IconType } from 'react-icons'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 import Header from '@/App/Storefront/Header'
@@ -32,7 +34,8 @@ const Dashboard: React.FC<LayoutProps> = ({
                 to={item.to}
                 end={item.to === '/' || item.to === '/admin'}
               >
-                {item.label}
+                <AdminNavIcon route={item.to} />
+                <span>{item.label}</span>
               </AdminNavLink>
             ))}
           </AdminNav>
@@ -52,35 +55,58 @@ const Dashboard: React.FC<LayoutProps> = ({
   )
 }
 
+const ADMIN_NAV_ICONS: Record<string, IconType> = {
+  '/': LuStore,
+  '/admin': LuLayoutDashboard,
+  '/admin/publishing-changelog': LuHistory,
+}
+
+function AdminNavIcon({ route }: { route: string }) {
+  const Icon = ADMIN_NAV_ICONS[route] ?? LuLayoutDashboard
+
+  return <Icon aria-hidden="true" />
+}
+
 const AdminNav = styled.nav`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 22px;
 `
 
 const AdminNavLink = styled(NavLink)`
   display: inline-flex;
   align-items: center;
-  border: 1px solid #d9dee8;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #344054;
-  padding: 8px 12px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: #151515;
+  color: #ffffff;
+  padding: 10px 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.2);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 
   &:hover {
-    border-color: #b8c0cc;
-    background: #f8fafc;
-    color: #111827;
+    background: #27272a;
+    color: #ffffff;
   }
 
   &.active {
-    border-color: #2684ff;
-    background: #eef6ff;
-    color: #0b5cab;
+    background: #151515;
+    color: #ffffff;
+    box-shadow:
+      0 10px 22px rgba(17, 24, 39, 0.2),
+      0 0 0 3px rgba(38, 132, 255, 0.28);
   }
 
   &:focus-visible {
