@@ -1,1 +1,0 @@
-› $grill-with-docs Can you please make this a pnpm workspace monorepo. This will contain two basic applications for a tech test that I am doing for a job. I need a rails api only backend (microservice) and a react typescript vite frontend that will be a pluggable microfrontend using module federation. For now just make the monorepo, we will initialize the packages after.

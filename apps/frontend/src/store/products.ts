@@ -33,6 +33,8 @@ type ProductStoreState = {
   loadProductHistory: (product: Product) => Promise<void>
   publishNow: (product: Product) => Promise<void>
   unpublishNow: (product: Product) => Promise<void>
+  publishLater: (product: Product, scheduledAt: string) => Promise<void>
+  cancelPublishLater: (product: Product) => Promise<void>
 }
 
 export const useProductsStore = create<ProductStoreState>()((set, get) => ({
@@ -56,7 +58,7 @@ export const useProductsStore = create<ProductStoreState>()((set, get) => ({
       set({
         products: [],
         loading: false,
-        error: apiErrorMessage(error),
+        error: await apiErrorMessage(error),
       })
     }
   },
@@ -96,6 +98,8 @@ export const useProductsStore = create<ProductStoreState>()((set, get) => ({
         },
       }))
     } catch (error) {
+      const message = await apiErrorMessage(error)
+
       set((state) => ({
         historyLoadingByProductId: {
           ...state.historyLoadingByProductId,
@@ -103,7 +107,7 @@ export const useProductsStore = create<ProductStoreState>()((set, get) => ({
         },
         historyErrorByProductId: {
           ...state.historyErrorByProductId,
-          [product.id]: apiErrorMessage(error),
+          [product.id]: message,
         },
       }))
     }
@@ -116,6 +120,16 @@ export const useProductsStore = create<ProductStoreState>()((set, get) => ({
   unpublishNow: async (product) => {
     await runProductAction(product, () =>
       productCatalogueApi.unpublishNow(product.apiId),
+    )
+  },
+  publishLater: async (product, scheduledAt) => {
+    await runProductAction(product, () =>
+      productCatalogueApi.publishLater(product.apiId, scheduledAt),
+    )
+  },
+  cancelPublishLater: async (product) => {
+    await runProductAction(product, () =>
+      productCatalogueApi.cancelPublishLater(product.apiId),
     )
   },
 }))
@@ -150,7 +164,7 @@ const runProductAction = async (
 
     await getState().loadProductHistory(updatedProduct)
   } catch (error) {
-    throw new Error(apiErrorMessage(error), { cause: error })
+    throw new Error(await apiErrorMessage(error), { cause: error })
   } finally {
     setState((state) => ({
       actionLoadingByProductId: {

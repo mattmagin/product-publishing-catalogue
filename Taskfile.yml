@@ -1,6 +1,12 @@
-version: "3"
+version: '3'
 
 tasks:
+  setup:
+    desc: Install frontend dependencies and configure the backend
+    cmds:
+      - pnpm install
+      - task api:setup
+
   dev:
     desc: Start the development environment (Rails API + Postgres + Vite microfrontend)
     cmds:

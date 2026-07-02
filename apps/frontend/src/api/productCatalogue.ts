@@ -21,7 +21,8 @@ type PublicationEventResponse = {
   event_type: string
   from_state: ProductStatus
   to_state: ProductStatus
-  triggered_by: 'operator' | 'system'
+  triggered_by: 'user' | 'system'
+  user_name: string | null
   occurred_at: string
 }
 
@@ -40,11 +41,14 @@ const formatDateTime = (value: string | null) => {
   }).format(date)
 }
 
-const humanizeEventType = (eventType: string) =>
-  eventType.replaceAll('_', ' ')
+const humanizeEventType = (eventType: string) => eventType.replaceAll('_', ' ')
 
-const eventDescription = (event: PublicationEventResponse) =>
-  `${event.triggered_by === 'system' ? 'System' : 'Operator'} changed product from ${event.from_state} to ${event.to_state}.`
+const eventDescription = (event: PublicationEventResponse) => {
+  const actor =
+    event.triggered_by === 'system' ? 'System' : (event.user_name ?? 'User')
+
+  return `${actor} changed product from ${event.from_state} to ${event.to_state}.`
+}
 
 const mapProduct = (product: ProductResponse): Product => ({
   apiId: product.id,
@@ -85,14 +89,32 @@ export const productCatalogueApi = {
   },
   async publishNow(productApiId: number) {
     const product = await apiClient
-      .post(`products/${productApiId}/publish_now`)
+      .post(`products/${productApiId}/publish`)
       .json<ProductResponse>()
 
     return mapProduct(product)
   },
   async unpublishNow(productApiId: number) {
     const product = await apiClient
-      .post(`products/${productApiId}/unpublish_now`)
+      .post(`products/${productApiId}/unpublish`)
+      .json<ProductResponse>()
+
+    return mapProduct(product)
+  },
+  async publishLater(productApiId: number, scheduledAt: string) {
+    const product = await apiClient
+      .post(`products/${productApiId}/publish_later`, {
+        json: {
+          scheduled_at: scheduledAt,
+        },
+      })
+      .json<ProductResponse>()
+
+    return mapProduct(product)
+  },
+  async cancelPublishLater(productApiId: number) {
+    const product = await apiClient
+      .delete(`products/${productApiId}/publish_later`)
       .json<ProductResponse>()
 
     return mapProduct(product)

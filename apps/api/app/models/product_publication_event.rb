@@ -1,3 +1,5 @@
+  # Publication events are intended to be add-only, however for this mvp we have not added any enforcement of this rule in the database
+
 class ProductPublicationEvent < ApplicationRecord
   EVENT_TYPES = {
     publish_scheduled: "publish_scheduled",
@@ -7,7 +9,7 @@ class ProductPublicationEvent < ApplicationRecord
   }.freeze
 
   TRIGGERED_BY = {
-    operator: "operator",
+    user: "user",
     system: "system"
   }.freeze
 
@@ -19,10 +21,7 @@ class ProductPublicationEvent < ApplicationRecord
   validates :event_type, inclusion: { in: EVENT_TYPES.values }
   validates :from_state, :to_state, inclusion: { in: Product::STATUSES.values }
   validates :triggered_by, inclusion: { in: TRIGGERED_BY.values }
-  validate :operator_events_have_user
-
-  # Publication events are intended to be append-only; v1 documents that contract
-  # without enforcing update/delete restrictions in Rails or the database.
+  validate :user_events_have_user
 
   private
 
@@ -30,9 +29,9 @@ class ProductPublicationEvent < ApplicationRecord
     self.occurred_at ||= Time.current
   end
 
-  def operator_events_have_user
-    return unless triggered_by == TRIGGERED_BY[:operator] && user.blank?
+  def user_events_have_user
+    return unless triggered_by == TRIGGERED_BY[:user] && user.blank?
 
-    errors.add(:user, "must exist for operator-triggered events")
+    errors.add(:user, "must exist for user-triggered events")
   end
 end

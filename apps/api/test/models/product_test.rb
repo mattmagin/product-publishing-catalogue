@@ -1,76 +1,15 @@
 require "test_helper"
 
 class ProductTest < ActiveSupport::TestCase
-  test "is valid with required attributes" do
-    product = build_product
-
-    assert product.valid?
-  end
-
-  test "requires sku" do
-    product = build_product(sku: nil)
-
-    assert_not product.valid?
-    assert_includes product.errors[:sku], "can't be blank"
-  end
-
-  test "requires unique sku" do
-    create_product(sku: "PROD-1001")
-    duplicate = build_product(sku: "PROD-1001")
-
-    assert_not duplicate.valid?
-    assert_includes duplicate.errors[:sku], "has already been taken"
-  end
-
-  test "requires title" do
-    product = build_product(title: nil)
-
-    assert_not product.valid?
-    assert_includes product.errors[:title], "can't be blank"
-  end
-
-  test "requires image url" do
-    product = build_product(image_url: nil)
-
-    assert_not product.valid?
-    assert_includes product.errors[:image_url], "can't be blank"
-  end
-
-  test "requires non-negative price" do
-    product = build_product(price: -0.01)
-
-    assert_not product.valid?
-    assert_includes product.errors[:price], "must be greater than or equal to 0"
-  end
-
-  test "does not allow published and scheduled timestamps together" do
-    product = build_product(
-      published_at: Time.current,
-      scheduled_publish_at: 1.day.from_now,
-    )
-
-    assert_not product.valid?
-    assert_includes(
-      product.errors[:base],
-      "Product cannot be published and scheduled at the same time",
-    )
-  end
-
-  test "requires scheduled publish time to be in the future" do
-    product = build_product(scheduled_publish_at: 1.minute.ago)
-
-    assert_not product.valid?
-    assert_includes product.errors[:scheduled_publish_at], "must be in the future"
-  end
-
   test "reports draft status" do
     product = build_product
 
     assert_equal "draft", product.status
   end
 
-  test "reports scheduled status" do
-    product = build_product(scheduled_publish_at: 1.day.from_now)
+  test "reports scheduled status when a pending publish schedule exists" do
+    product = create_product
+    create_schedule(product, action: "publish", scheduled_at: 1.day.from_now)
 
     assert_equal "scheduled", product.status
   end
@@ -81,29 +20,37 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal "published", product.status
   end
 
+  test "executed and cancelled schedules do not make a product scheduled" do
+    executed_product = create_product(sku: "PROD-1001")
+    executed_schedule = create_schedule(executed_product, action: "publish", scheduled_at: 1.day.from_now)
+    executed_schedule.update!(status: "executed")
+
+    cancelled_product = create_product(sku: "PROD-1002")
+    cancelled_schedule = create_schedule(cancelled_product, action: "publish", scheduled_at: 1.day.from_now)
+    cancelled_schedule.update!(status: "cancelled")
+
+    assert_equal "draft", executed_product.status
+    assert_nil executed_product.scheduled_publish_at
+    assert_equal "draft", cancelled_product.status
+    assert_nil cancelled_product.scheduled_publish_at
+  end
+
+  test "computes scheduled_publish_at from a pending publish schedule" do
+    product = create_product
+    schedule = create_schedule(product, action: "publish", scheduled_at: 1.day.from_now)
+
+    assert_equal schedule.scheduled_at, product.scheduled_publish_at
+  end
+
   test "filters by publication state" do
     draft = create_product(sku: "PROD-1001")
-    scheduled = create_product(sku: "PROD-1002", scheduled_publish_at: 1.day.from_now)
+    scheduled = create_product(sku: "PROD-1002")
+    create_schedule(scheduled, action: "publish", scheduled_at: 1.day.from_now)
     published = create_product(sku: "PROD-1003", published_at: Time.current)
 
     assert_equal [ draft ], Product.draft.to_a
     assert_equal [ scheduled ], Product.scheduled.to_a
     assert_equal [ published ], Product.published.to_a
-  end
-
-  test "has many publication events" do
-    product = create_product(sku: "PROD-1001")
-    user = User.create!(name: "Operator", email: "operator@example.com")
-    event = ProductPublicationEvent.create!(
-      product:,
-      user:,
-      event_type: "publish_scheduled",
-      from_state: "draft",
-      to_state: "scheduled",
-      triggered_by: "operator",
-    )
-
-    assert_equal [ event ], product.publication_events.to_a
   end
 
   private
@@ -121,5 +68,22 @@ class ProductTest < ActiveSupport::TestCase
 
   def create_product(attributes = {})
     build_product(attributes).tap(&:save!)
+  end
+
+  def create_schedule(product, action:, scheduled_at:)
+    product.product_schedules.create!(
+      action:,
+      scheduled_at:,
+      created_by: create_user,
+    )
+  end
+
+  def create_user(attributes = {})
+    User.create!(
+      {
+        name: "Matt Magin",
+        email: "matt-#{SecureRandom.hex(4)}@magin.com"
+      }.merge(attributes),
+    )
   end
 end

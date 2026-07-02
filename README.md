@@ -1,76 +1,51 @@
 # Universal Store Product Publishing Catalogue
 
-This repository is a pnpm workspace monorepo for a tech test.
+## Prerequisites
 
-## Workspace Layout
+Install these before running the app:
+- [Docker](https://docs.docker.com/engine/install/) with Docker Compose, with Docker running
+- [pnpm](https://pnpm.io)
+- [Taskfile](https://taskfile.dev/), so the `task` command is available (optional)
 
-```text
-apps/
-  api/  # Future Rails API-only backend microservice
-  frontend/  # React TypeScript Vite Module Federation remote
+## Run Locally
+For a fresh clone, run this once first:
+```sh
+task setup
 ```
 
-The backend is a Rails API-only app. The frontend is a Vite React app exposed as a Module Federation remote.
+Then start the app:
+```sh
+task dev
+```
 
-## Commands
+This starts the Rails API, background jobs, PostgreSQL, and the Vite frontend.
+
+Ruby, Rails, and PostgreSQL do not need to be installed locally because Docker runs the backend services.
+
+## Without Taskfile
+
+If you do not have Taskfile installed, run the equivalent commands directly:
 
 ```sh
 pnpm install
-pnpm dev
-pnpm build
-pnpm test
-pnpm lint
-pnpm typecheck
-```
-
-The root scripts use `--if-present`, so they are safe to run before the app packages define their own scripts.
-
-## Backend API
-
-The backend API lives in `apps/api`. It is a Rails API-only app backed by PostgreSQL.
-
-Docker Compose owns the development runtime, so Ruby, Rails, and PostgreSQL do not need to be installed on the host.
-
-```sh
-pnpm api:build
-pnpm api:setup
-pnpm api:dev
-```
-
-The API is available at `http://localhost:3000`. Rails exposes its default health check at `http://localhost:3000/up`.
-
-Useful commands:
-
-```sh
-pnpm api:test
-pnpm api:console
-pnpm api:shell
-```
-
-The API container bind-mounts `apps/api`, so Rails development code changes are picked up without rebuilding the image. Rebuild the image after changing the Gemfile.
-
-## Frontend Microfrontend
-
-The frontend microfrontend lives in `apps/frontend`. It can run standalone during development and exposes a Module Federation remote for a future host shell.
-
-```sh
+docker compose run --rm api bin/rails db:prepare
+docker compose up -d
 pnpm frontend:dev
-pnpm frontend:build
-pnpm frontend:preview
-pnpm frontend:lint
 ```
 
-Standalone development URL:
+## Local URLs
 
-```text
-http://localhost:5173
-```
+- Frontend (Published Catalogue): `http://localhost:5173`
+- Admin Dashboard: `http://localhost:5173/admin` 
+   - (hint: click space to swap between the dashboard and published catalogue)
+- API: `http://localhost:3000`
+- API health check: `http://localhost:3000/up`
 
-Module Federation contract:
+## Useful Commands
 
-```text
-Remote name: product_publishing_frontend
-Exposed modules: ./App, ./App2
-Manifest URL: http://localhost:5173/mf-manifest.json
-Remote entry URL: http://localhost:5173/remoteEntry.js
+```sh
+task api:test
+task frontend:build
+task api:logs
+task api:stop
 ```

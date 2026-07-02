@@ -169,29 +169,31 @@ products_fixture = [
   }
 ]
 
+seed_user = User.find_or_create_by!(email: "matt@magin.com") do |user|
+  user.name = "Matt Magin"
+end
+
 products_fixture.each_with_index do |fixture_product, index|
   product = Product.find_or_initialize_by(sku: fixture_product.fetch(:sku))
 
-  publication_timestamps =
-    case fixture_product.fetch(:status)
-    when "published"
-      { published_at: index.days.ago, scheduled_publish_at: nil }
-    when "scheduled"
-      { published_at: nil, scheduled_publish_at: (index + 1).days.from_now }
-    else
-      { published_at: nil, scheduled_publish_at: nil }
-    end
+  published_at = index.days.ago if fixture_product.fetch(:status) == "published"
 
   product.update!(
     title: fixture_product.fetch(:title),
     price: fixture_product.fetch(:price),
     image_url: fixture_product.fetch(:image_url),
-    **publication_timestamps,
+    published_at:,
   )
-end
 
-seed_operator = User.find_or_create_by!(email: "operator@example.com") do |user|
-  user.name = "Catalogue Operator"
+  next unless fixture_product.fetch(:status) == "scheduled"
+
+  product.product_schedules.find_or_create_by!(
+    action: ProductSchedule::ACTIONS[:publish],
+    status: ProductSchedule::STATUSES[:pending],
+  ) do |schedule|
+    schedule.scheduled_at = (index + 1).days.from_now
+    schedule.created_by = user
+  end
 end
 
 Product.find_each do |product|
@@ -203,8 +205,8 @@ Product.find_each do |product|
       event_type: ProductPublicationEvent::EVENT_TYPES[:publish_scheduled],
       from_state: Product::STATUSES[:draft],
       to_state: Product::STATUSES[:scheduled],
-      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
-      user: seed_operator,
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:user],
+      user: seed_user,
       occurred_at: 3.days.ago,
     )
     product.publication_events.create!(
@@ -219,8 +221,8 @@ Product.find_each do |product|
       event_type: ProductPublicationEvent::EVENT_TYPES[:publish_scheduled],
       from_state: Product::STATUSES[:draft],
       to_state: Product::STATUSES[:scheduled],
-      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
-      user: seed_operator,
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:user],
+      user: seed_user,
       occurred_at: 2.days.ago,
     )
   else
@@ -228,8 +230,8 @@ Product.find_each do |product|
       event_type: ProductPublicationEvent::EVENT_TYPES[:unpublished],
       from_state: Product::STATUSES[:published],
       to_state: Product::STATUSES[:draft],
-      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
-      user: seed_operator,
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:user],
+      user: seed_user,
       occurred_at: 1.day.ago,
     )
   end

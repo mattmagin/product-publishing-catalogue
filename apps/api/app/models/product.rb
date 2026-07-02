@@ -1,6 +1,7 @@
 class Product < ApplicationRecord
   has_many :publication_events,
     class_name: "ProductPublicationEvent"
+  has_many :product_schedules
 
   STATUSES = {
     draft: "draft",
@@ -11,31 +12,25 @@ class Product < ApplicationRecord
   validates :sku, :title, :price, :image_url, presence: true
   validates :sku, uniqueness: true
   validates :price, numericality: { greater_than_or_equal_to: 0 }
-  validate :has_one_publication_state
-  validate :scheduled_publish_at_is_in_the_future
 
-  scope :draft, -> { where(published_at: nil, scheduled_publish_at: nil) }
-  scope :published, -> { where.not(published_at: nil).where(scheduled_publish_at: nil) }
-  scope :scheduled, -> { where(published_at: nil).where.not(scheduled_publish_at: nil) }
+  scope :draft, -> { where(published_at: nil).where.not(id: ProductSchedule.pending.to_publish.select(:product_id)) }
+  scope :published, -> { where.not(published_at: nil) }
+  scope :scheduled, -> { where(published_at: nil).where(id: ProductSchedule.pending.to_publish.select(:product_id)) }
 
   def status
     return STATUSES[:published] if published_at.present?
-    return STATUSES[:scheduled] if scheduled_publish_at.present?
+    return STATUSES[:scheduled] if pending_publish_schedule.present?
 
     STATUSES[:draft]
   end
 
-  private
-
-  def has_one_publication_state
-    return unless published_at.present? && scheduled_publish_at.present?
-
-    errors.add(:base, "Product cannot be published and scheduled at the same time")
+  def scheduled_publish_at
+    pending_publish_schedule&.scheduled_at
   end
 
-  def scheduled_publish_at_is_in_the_future
-    return if scheduled_publish_at.blank? || scheduled_publish_at.future?
+  private
 
-    errors.add(:scheduled_publish_at, "must be in the future")
+  def pending_publish_schedule
+    product_schedules.select { |s| s.status == ProductSchedule::STATUSES[:pending] && s.action == ProductSchedule::ACTIONS[:publish] }.first
   end
 end

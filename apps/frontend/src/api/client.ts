@@ -10,8 +10,22 @@ export const apiClient = ky.create({
   prefix: prefixUrl,
 })
 
-export const apiErrorMessage = (error: unknown) => {
+export const apiErrorMessage = async (error: unknown) => {
   if (error instanceof HTTPError) {
+    const body = await error.response
+      .clone()
+      .json()
+      .catch(() => null)
+
+    if (
+      body &&
+      typeof body === 'object' &&
+      'error' in body &&
+      typeof body.error === 'string'
+    ) {
+      return body.error
+    }
+
     return `Request failed with status ${error.response.status}`
   }
 

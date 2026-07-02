@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_000400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,20 +30,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_000200) do
     t.index ["user_id"], name: "index_product_publication_events_on_user_id"
   end
 
+  create_table "product_schedules", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.datetime "executed_at"
+    t.bigint "product_id", null: false
+    t.datetime "scheduled_at", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_product_schedules_on_created_by_id"
+    t.index ["product_id", "action"], name: "index_product_schedules_on_product_id_and_action_pending", unique: true, where: "((status)::text = 'pending'::text)"
+    t.index ["product_id"], name: "index_product_schedules_on_product_id"
+    t.index ["status", "scheduled_at"], name: "index_product_schedules_on_status_and_scheduled_at"
+  end
+
   create_table "products", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "image_url", null: false
     t.decimal "price", precision: 10, scale: 2, null: false
     t.datetime "published_at"
-    t.datetime "scheduled_publish_at"
     t.string "sku", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["published_at"], name: "index_products_on_published_at"
-    t.index ["scheduled_publish_at"], name: "index_products_on_scheduled_publish_at"
     t.index ["sku"], name: "index_products_on_sku", unique: true
     t.check_constraint "price >= 0::numeric", name: "products_price_non_negative"
-    t.check_constraint "published_at IS NULL OR scheduled_publish_at IS NULL", name: "products_single_publication_state"
   end
 
   create_table "users", force: :cascade do |t|
@@ -56,4 +68,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_000200) do
 
   add_foreign_key "product_publication_events", "products"
   add_foreign_key "product_publication_events", "users"
+  add_foreign_key "product_schedules", "products"
+  add_foreign_key "product_schedules", "users", column: "created_by_id"
 end

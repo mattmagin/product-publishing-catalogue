@@ -31,7 +31,8 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", first_event.fetch("event_type")
     assert_equal "scheduled", first_event.fetch("from_state")
     assert_equal "published", first_event.fetch("to_state")
-    assert_equal "operator", first_event.fetch("triggered_by")
+    assert_equal "user", first_event.fetch("triggered_by")
+    assert_equal "Matt Magin", first_event.fetch("user_name")
     assert first_event.key?("occurred_at")
     assert first_event.key?("created_at")
     assert first_event.key?("updated_at")
@@ -52,6 +53,29 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ included_event.id ], response.parsed_body.pluck("id")
   end
 
+  test "index returns nil user name for system events" do
+    product = create_product(sku: "PROD-1001")
+    event = create_publication_event(
+      product:,
+      event_type: "published",
+      from_state: "scheduled",
+      to_state: "published",
+      triggered_by: "system",
+      user: nil,
+    )
+
+    get publication_events_url(product_id: product.id)
+
+    assert_response :success
+
+    response_event = response.parsed_body.first
+    assert_equal event.id, response_event.fetch("id")
+    assert_equal "system", response_event.fetch("triggered_by")
+    assert_nil response_event.fetch("user_id")
+    assert_nil response_event.fetch("user_name")
+    assert_not response_event.key?("user")
+  end
+
   private
 
   def create_product(attributes = {})
@@ -68,8 +92,8 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
   def create_user(attributes = {})
     User.create!(
       {
-        name: "Operator",
-        email: "operator@example.com"
+        name: "Matt Magin",
+        email: "matt@magin.com"
       }.merge(attributes),
     )
   end
@@ -80,7 +104,7 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
         event_type: "publish_scheduled",
         from_state: "draft",
         to_state: "scheduled",
-        triggered_by: "operator",
+        triggered_by: "user",
         occurred_at: Time.current
       }.merge(attributes),
     )

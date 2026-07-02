@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   resources :products, only: %i[index show] do
-    post :publish_now, on: :member
-    post :unpublish_now, on: :member
+    post :publish, on: :member
+    post :unpublish, on: :member
+    post :publish_later, on: :member
+    delete :publish_later, on: :member, action: :cancel_publish_later
   end
   resources :publication_events, only: %i[index]
 

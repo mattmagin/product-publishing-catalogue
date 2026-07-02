@@ -22,5 +22,8 @@
     "frontend:format": "pnpm --filter product-publishing-frontend format",
     "frontend:format:check": "pnpm --filter product-publishing-frontend format:check",
     "frontend:lint": "pnpm --filter product-publishing-frontend lint"
+  },
+  "dependencies": {
+    "react-icons": "^5.7.0"
   }
 }
