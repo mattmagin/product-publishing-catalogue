@@ -1,4 +1,7 @@
 class Product < ApplicationRecord
+  has_many :publication_events,
+    class_name: "ProductPublicationEvent"
+
   STATUSES = {
     draft: "draft",
     scheduled: "scheduled",

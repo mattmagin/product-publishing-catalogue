@@ -91,6 +91,21 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal [ published ], Product.published.to_a
   end
 
+  test "has many publication events" do
+    product = create_product(sku: "PROD-1001")
+    user = User.create!(name: "Operator", email: "operator@example.com")
+    event = ProductPublicationEvent.create!(
+      product:,
+      user:,
+      event_type: "publish_scheduled",
+      from_state: "draft",
+      to_state: "scheduled",
+      triggered_by: "operator",
+    )
+
+    assert_equal [ event ], product.publication_events.to_a
+  end
+
   private
 
   def build_product(attributes = {})
