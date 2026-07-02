@@ -4,7 +4,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
     label: 'Published Catalogue',
     to: '/',
-    opensInNewTab: true,
   },
   {
     label: 'Dashboard',
