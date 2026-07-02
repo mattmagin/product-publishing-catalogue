@@ -1,5 +1,11 @@
 # Universal Store Product Publishing Catalogue
 
+## Docs
+
+- [The Brief](docs/THE_BRIEF.md)
+- [Scoping Document](docs/SCOPING_DOCUMENT.md)
+- [Technical Design Document](docs/TECHNICAL_DESIGN_DOCUMENT.md)
+
 ## Prerequisites
 
 Install these before running the app:
