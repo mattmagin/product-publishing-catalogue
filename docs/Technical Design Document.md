@@ -540,7 +540,7 @@ These tests prove that the API exposes the domain rules correctly and records th
 - Generic `404` handling for every endpoint, because `ActiveRecord::RecordNotFound` is handled centrally and the publishing risk is in state transitions rather than route plumbing.
 - Production queueing behaviour, because the local implementation only needs to demonstrate the workflow.
 - Browser-level visual polish, because the UI is a demo surface rather than a production design-system implementation.
-- Frontend component tests, because the frontend is a demonstration surface and the critical risk is backend state and audit correctness.
+- Frontend component tests, because the frontend is a demonstration surface and the critical risk is backend state and audit correctness. For this version, the TypeScript build is the frontend safety net for API shape, data mapping, and wiring.
 - Full ecommerce product behaviour such as sale pricing, sizes, variants, or inventory.
 - High-concurrency scheduler execution, because the local demo assumes a single worker. The design notes where locking would be added for production.
 
@@ -570,6 +570,7 @@ These tests prove that the API exposes the domain rules correctly and records th
 
 ### Path to Production
 - Add authentication, authorization, and real user attribution.
+- Generate or share frontend API types from the Rails backend contract, for example through an OpenAPI schema or typed client generation, so frontend request and response types do not drift from the API.
 - Add database-level constraints and indexes for publication state queries and event lookups.
 - Add row locking or a claiming mechanism for due scheduled publishes if multiple workers can run.
 - Add observability for scheduled publish execution, failures, and lag between scheduled time and actual publish time.
