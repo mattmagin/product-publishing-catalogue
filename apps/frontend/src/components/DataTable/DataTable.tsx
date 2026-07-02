@@ -1,4 +1,4 @@
-import { Pagination } from '@ark-ui/react/pagination'
+import { Pagination } from '@chakra-ui/react'
 import { useDataTableContext } from './DataTableContext'
 import { DataTableProvider } from './DataTableProvider'
 import { getSortIndicator, renderCell } from './helpers'

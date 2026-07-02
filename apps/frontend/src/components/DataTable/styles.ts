@@ -1,4 +1,3 @@
-import { Select } from '@ark-ui/react/select'
 import styled from 'styled-components'
 import type { DataTableAlign } from './types'
 

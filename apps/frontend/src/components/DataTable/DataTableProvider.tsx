@@ -1,14 +1,7 @@
-import { createListCollection } from '@ark-ui/react/select'
 import { type ReactNode, useCallback, useMemo, useState } from 'react'
-import {
-  DataTableContext,
-  type DataTableContextValue,
-  type DataTablePageSizeItem,
-} from './DataTableContext'
+import { DataTableContext, type DataTableContextValue } from './DataTableContext'
 import { comparePrimitive } from './helpers'
 import type { DataTableColumn, DataTableProps, DataTableSort } from './types'
-
-const defaultPageSizeOptions = [10, 15, 20, 25, 30]
 
 type DataTableProviderProps<T extends object> = DataTableProps<T> & {
   children: ReactNode
@@ -35,7 +28,6 @@ export function DataTableProvider<T extends object>({
   defaultPageSize = 10,
   pageSize,
   onPageSizeChange,
-  pageSizeOptions = defaultPageSizeOptions,
   totalRows,
   manualPagination = false,
 }: DataTableProviderProps<T>) {
@@ -77,17 +69,6 @@ export function DataTableProvider<T extends object>({
     const start = (activePage - 1) * activePageSize
     return sortedData.slice(start, start + activePageSize)
   }, [activePage, activePageSize, manualPagination, pagination, sortedData])
-
-  const pageSizeCollection = useMemo(
-    () =>
-      createListCollection<DataTablePageSizeItem>({
-        items: pageSizeOptions.map((option) => ({
-          label: String(option),
-          value: String(option),
-        })),
-      }),
-    [pageSizeOptions],
-  )
 
   const handleSort = useCallback(
     (column: DataTableColumn<T>) => {
@@ -162,7 +143,6 @@ export function DataTableProvider<T extends object>({
       loading,
       manualPagination,
       onRowClick,
-      pageSizeCollection,
       pagination,
       rowCount,
       rowKey,
@@ -185,7 +165,6 @@ export function DataTableProvider<T extends object>({
       loading,
       manualPagination,
       onRowClick,
-      pageSizeCollection,
       pagination,
       rowCount,
       rowKey,

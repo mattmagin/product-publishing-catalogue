@@ -1,10 +1,10 @@
-import { Field } from '@ark-ui/react'
+import { Field, Input } from '@chakra-ui/react'
 
 const TextInput = () => {
   return (
     <Field.Root>
       <Field.Label />
-      <Field.Input />
+      <Input />
       <Field.HelperText />
     </Field.Root>
   )

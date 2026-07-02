@@ -1,12 +1,6 @@
 import { createContext, useContext } from 'react'
-import type { ListCollection } from '@ark-ui/react/select'
 import type { ReactNode } from 'react'
 import type { DataTableColumn, DataTableProps, DataTableSort } from './types'
-
-export type DataTablePageSizeItem = {
-  label: string
-  value: string
-}
 
 export type DataTableContextValue<T extends object> = {
   activePage: number
@@ -24,7 +18,6 @@ export type DataTableContextValue<T extends object> = {
   loading: boolean
   manualPagination: boolean
   onRowClick: DataTableProps<T>['onRowClick']
-  pageSizeCollection: ListCollection<DataTablePageSizeItem>
   pagination: boolean
   rowCount: number
   rowKey: keyof T & string
