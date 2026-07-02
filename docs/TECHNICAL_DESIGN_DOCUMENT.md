@@ -211,6 +211,10 @@ Although publication state is derived from timestamps rather than stored in a `s
 ### `GET /products`
 Returns products. Passing `status=published` returns the customer-visible catalogue view; omitting `status` returns all products for the admin workflow.
 
+This endpoint supports two demo surfaces:
+- the admin UI calls `GET /products` without a status filter so operators can see draft, scheduled, and published products;
+- the customer catalogue calls `GET /products?status=published` so customers only see currently visible products.
+
 #### Request Shape
 - No request body.
 - Optional `status` query parameter filters products by `draft`, `scheduled`, or `published`.
@@ -489,7 +493,7 @@ Trade-offs:
 4. API records a `schedule_cancelled` event.
 
 **Fetch Customer Catalogue**
-1. Customer catalogue calls `GET /products`.
+1. Customer catalogue calls `GET /products?status=published`.
 2. API returns products with `published_at` present.
 3. The catalogue does not live-update automatically; users see changes when the page refreshes or the app refetches data.
 
