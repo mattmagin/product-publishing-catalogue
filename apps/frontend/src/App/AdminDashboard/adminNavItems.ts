@@ -1,4 +1,4 @@
-import type { NavItem } from '@/components/Dashboard/Sidebar'
+import type { NavItem } from '@/components/Dashboard'
 
 export const ADMIN_NAV_ITEMS: NavItem[] = [
   {
