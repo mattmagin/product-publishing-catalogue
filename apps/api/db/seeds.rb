@@ -189,3 +189,48 @@ products_fixture.each_with_index do |fixture_product, index|
     **publication_timestamps,
   )
 end
+
+seed_operator = User.find_or_create_by!(email: "operator@example.com") do |user|
+  user.name = "Catalogue Operator"
+end
+
+Product.find_each do |product|
+  product.publication_events.destroy_all
+
+  case product.status
+  when Product::STATUSES[:published]
+    product.publication_events.create!(
+      event_type: ProductPublicationEvent::EVENT_TYPES[:publish_scheduled],
+      from_state: Product::STATUSES[:draft],
+      to_state: Product::STATUSES[:scheduled],
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
+      user: seed_operator,
+      occurred_at: 3.days.ago,
+    )
+    product.publication_events.create!(
+      event_type: ProductPublicationEvent::EVENT_TYPES[:published],
+      from_state: Product::STATUSES[:scheduled],
+      to_state: Product::STATUSES[:published],
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:system],
+      occurred_at: product.published_at || 1.day.ago,
+    )
+  when Product::STATUSES[:scheduled]
+    product.publication_events.create!(
+      event_type: ProductPublicationEvent::EVENT_TYPES[:publish_scheduled],
+      from_state: Product::STATUSES[:draft],
+      to_state: Product::STATUSES[:scheduled],
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
+      user: seed_operator,
+      occurred_at: 2.days.ago,
+    )
+  else
+    product.publication_events.create!(
+      event_type: ProductPublicationEvent::EVENT_TYPES[:unpublished],
+      from_state: Product::STATUSES[:published],
+      to_state: Product::STATUSES[:draft],
+      triggered_by: ProductPublicationEvent::TRIGGERED_BY[:operator],
+      user: seed_operator,
+      occurred_at: 1.day.ago,
+    )
+  end
+end

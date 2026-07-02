@@ -7,13 +7,15 @@ import { ProductStatusBadge } from './ProductStatusBadge'
 
 type ProductListTableProps = {
   products: Product[]
-  selectedProductId: string
+  selectedProductId: string | null
+  loading?: boolean
   onProductSelect: (product: Product) => void
 }
 
 export function ProductListTable({
   products,
   selectedProductId,
+  loading = false,
   onProductSelect,
 }: ProductListTableProps) {
   const productColumns = useMemo<DataTableColumn<Product>[]>(
@@ -74,6 +76,7 @@ export function ProductListTable({
         columns={productColumns}
         data={products}
         keyField="id"
+        loading={loading}
         selectedRowId={selectedProductId}
         onRowClick={onProductSelect}
         pagination

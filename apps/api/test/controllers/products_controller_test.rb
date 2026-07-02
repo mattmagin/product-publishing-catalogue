@@ -52,6 +52,119 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "error" => "Not found" }, response.parsed_body)
   end
 
+  test "publish now publishes a draft product and records an operator event" do
+    product = create_product(sku: "PROD-PUBLISH-DRAFT")
+
+    assert_difference -> { ProductPublicationEvent.count }, 1 do
+      post publish_now_product_url(product)
+    end
+
+    assert_response :success
+
+    product.reload
+    assert_equal "published", product.status
+    assert product.published_at.present?
+    assert_nil product.scheduled_publish_at
+
+    event = ProductPublicationEvent.order(:id).last
+    assert_equal product, event.product
+    assert_equal "published", event.event_type
+    assert_equal "draft", event.from_state
+    assert_equal "published", event.to_state
+    assert_equal "operator", event.triggered_by
+    assert_equal "operator@example.com", event.user.email
+    assert_equal "published", response.parsed_body.fetch("status")
+  end
+
+  test "publish now publishes a scheduled product and clears the schedule" do
+    product = create_product(
+      sku: "PROD-PUBLISH-SCHEDULED",
+      scheduled_publish_at: 1.day.from_now,
+    )
+
+    assert_difference -> { ProductPublicationEvent.count }, 1 do
+      post publish_now_product_url(product)
+    end
+
+    assert_response :success
+
+    product.reload
+    assert_equal "published", product.status
+    assert product.published_at.present?
+    assert_nil product.scheduled_publish_at
+
+    event = ProductPublicationEvent.order(:id).last
+    assert_equal "published", event.event_type
+    assert_equal "scheduled", event.from_state
+    assert_equal "published", event.to_state
+  end
+
+  test "publish now returns conflict for an already published product" do
+    product = create_product(
+      sku: "PROD-PUBLISH-CONFLICT",
+      published_at: 1.day.ago,
+    )
+
+    assert_no_difference -> { ProductPublicationEvent.count } do
+      post publish_now_product_url(product)
+    end
+
+    assert_response :conflict
+    assert_equal({ "error" => "Product is already published" }, response.parsed_body)
+  end
+
+  test "unpublish now unpublishes a published product and records an operator event" do
+    product = create_product(
+      sku: "PROD-UNPUBLISH-PUBLISHED",
+      published_at: 1.day.ago,
+    )
+
+    assert_difference -> { ProductPublicationEvent.count }, 1 do
+      post unpublish_now_product_url(product)
+    end
+
+    assert_response :success
+
+    product.reload
+    assert_equal "draft", product.status
+    assert_nil product.published_at
+    assert_nil product.scheduled_publish_at
+
+    event = ProductPublicationEvent.order(:id).last
+    assert_equal product, event.product
+    assert_equal "unpublished", event.event_type
+    assert_equal "published", event.from_state
+    assert_equal "draft", event.to_state
+    assert_equal "operator", event.triggered_by
+    assert_equal "operator@example.com", event.user.email
+    assert_equal "draft", response.parsed_body.fetch("status")
+  end
+
+  test "unpublish now returns conflict for a draft product" do
+    product = create_product(sku: "PROD-UNPUBLISH-DRAFT")
+
+    assert_no_difference -> { ProductPublicationEvent.count } do
+      post unpublish_now_product_url(product)
+    end
+
+    assert_response :conflict
+    assert_equal({ "error" => "Product is not published" }, response.parsed_body)
+  end
+
+  test "unpublish now returns conflict for a scheduled product" do
+    product = create_product(
+      sku: "PROD-UNPUBLISH-SCHEDULED",
+      scheduled_publish_at: 1.day.from_now,
+    )
+
+    assert_no_difference -> { ProductPublicationEvent.count } do
+      post unpublish_now_product_url(product)
+    end
+
+    assert_response :conflict
+    assert_equal({ "error" => "Product is not published" }, response.parsed_body)
+  end
+
   private
 
   def create_product(attributes = {})

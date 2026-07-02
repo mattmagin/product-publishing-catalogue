@@ -7,7 +7,7 @@ type ProductScheduleFormProps = {
   scheduleTime: string
   onScheduleDateChange: (date: string) => void
   onScheduleTimeChange: (time: string) => void
-  onSchedule: () => void
+  disabled?: boolean
 }
 
 export function ProductScheduleForm({
@@ -15,13 +15,14 @@ export function ProductScheduleForm({
   scheduleTime,
   onScheduleDateChange,
   onScheduleTimeChange,
-  onSchedule,
+  disabled = false,
 }: ProductScheduleFormProps) {
   return (
     <ScheduleGroup>
       <FieldLabel>Schedule publish</FieldLabel>
       <ScheduleRow>
         <DatePicker.Root
+          disabled={disabled}
           positioning={{ sameWidth: true }}
           onValueChange={(details) => {
             const nextDate = details.valueAsString[0]
@@ -94,9 +95,10 @@ export function ProductScheduleForm({
         <TimeInput
           type="time"
           value={scheduleTime}
+          disabled={disabled}
           onChange={(event) => onScheduleTimeChange(event.currentTarget.value)}
         />
-        <ScheduleButton type="button" onClick={onSchedule}>
+        <ScheduleButton type="button" disabled={disabled}>
           Schedule
         </ScheduleButton>
       </ScheduleRow>

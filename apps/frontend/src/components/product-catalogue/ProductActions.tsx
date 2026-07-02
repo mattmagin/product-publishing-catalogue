@@ -6,34 +6,47 @@ type ProductActionsProps = {
   product: Product
   scheduleDate: string
   scheduleTime: string
-  onPublish: () => void
-  onUnpublish: () => void
   onScheduleDateChange: (date: string) => void
   onScheduleTimeChange: (time: string) => void
-  onSchedule: () => void
-  onCancelScheduledPublish: () => void
+  onPublishNow: () => void
+  onUnpublishNow: () => void
+  actionLoading?: boolean
+  disabled?: boolean
 }
 
 export function ProductActions({
   product,
   scheduleDate,
   scheduleTime,
-  onPublish,
-  onUnpublish,
   onScheduleDateChange,
   onScheduleTimeChange,
-  onSchedule,
-  onCancelScheduledPublish,
+  onPublishNow,
+  onUnpublishNow,
+  actionLoading = false,
+  disabled = false,
 }: ProductActionsProps) {
+  const canPublishNow = product.status !== 'published'
+  const canUnpublishNow = product.status === 'published'
+
   return (
     <DetailsSection>
       <SectionTitle>Actions</SectionTitle>
       <ActionGrid>
-        <PrimaryButton type="button" onClick={onPublish}>
-          Publish now
+        <PrimaryButton
+          type="button"
+          disabled={disabled || actionLoading || !canPublishNow}
+          onClick={onPublishNow}
+        >
+          {actionLoading && canPublishNow ? 'Publishing...' : 'Publish now'}
         </PrimaryButton>
-        <SecondaryButton type="button" onClick={onUnpublish}>
-          Unpublish now
+        <SecondaryButton
+          type="button"
+          disabled={disabled || actionLoading || !canUnpublishNow}
+          onClick={onUnpublishNow}
+        >
+          {actionLoading && canUnpublishNow
+            ? 'Unpublishing...'
+            : 'Unpublish now'}
         </SecondaryButton>
       </ActionGrid>
 
@@ -42,15 +55,14 @@ export function ProductActions({
         scheduleTime={scheduleTime}
         onScheduleDateChange={onScheduleDateChange}
         onScheduleTimeChange={onScheduleTimeChange}
-        onSchedule={onSchedule}
+        disabled
       />
 
       <ScheduleStatus>
         <span>{product.scheduledPublish ?? 'No scheduled publish'}</span>
         <SecondaryButton
           type="button"
-          onClick={onCancelScheduledPublish}
-          disabled={!product.scheduledPublish}
+          disabled
         >
           Cancel scheduled publish
         </SecondaryButton>

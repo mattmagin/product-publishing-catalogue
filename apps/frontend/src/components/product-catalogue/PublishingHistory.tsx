@@ -5,20 +5,17 @@ import Steps from '../ui/Steps'
 
 type PublishingHistoryProps = {
   history: ProductHistoryEntry[]
+  loading: boolean
+  error: string | null
 }
 
-const HistoryItemContainer = () => {
-  return (
-    <div>
-      <span>History Item Title</span>
-      <span>History Item Description</span>
-    </div>
-  )
-}
-
-export function PublishingHistory({ history }: PublishingHistoryProps) {
-  // TODO: we assume that the backend serves the history in the correct order (most recent first). If this is not the case, we should sort the history items here before passing them to the Steps component.
-  const historyItems = history.map(({ title, description }) => ({
+export function PublishingHistory({
+  history,
+  loading,
+  error,
+}: PublishingHistoryProps) {
+  const historyItems = history.map(({ value, title, description }) => ({
+    value,
     title,
     description,
   }))
@@ -26,7 +23,17 @@ export function PublishingHistory({ history }: PublishingHistoryProps) {
   return (
     <DetailsSection>
       <SectionHeading>Publishing History</SectionHeading>
-      <Steps items={historyItems} />
+      {loading ? (
+        <HistoryState>Loading publishing history...</HistoryState>
+      ) : error ? (
+        <HistoryError role="alert">
+          Publishing history could not be loaded. {error}
+        </HistoryError>
+      ) : historyItems.length > 0 ? (
+        <Steps items={historyItems} />
+      ) : (
+        <HistoryState>No publishing history has been recorded.</HistoryState>
+      )}
     </DetailsSection>
   )
 }
@@ -37,4 +44,16 @@ const DetailsSection = styled.section`
   & + & {
     border-top: 1px solid #edf0f5;
   }
+`
+
+const HistoryState = styled.p`
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+`
+
+const HistoryError = styled.p`
+  margin: 0;
+  color: #991b1b;
+  font-size: 13px;
 `

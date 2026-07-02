@@ -8,24 +8,26 @@ type ProductDetailsProps = {
   product: Product
   scheduleDate: string
   scheduleTime: string
-  onPublish: () => void
-  onUnpublish: () => void
+  historyLoading: boolean
+  historyError: string | null
+  actionLoading: boolean
   onScheduleDateChange: (date: string) => void
   onScheduleTimeChange: (time: string) => void
-  onSchedule: () => void
-  onCancelScheduledPublish: () => void
+  onPublishNow: () => void
+  onUnpublishNow: () => void
 }
 
 export function ProductDetails({
   product,
   scheduleDate,
   scheduleTime,
-  onPublish,
-  onUnpublish,
+  historyLoading,
+  historyError,
+  actionLoading,
   onScheduleDateChange,
   onScheduleTimeChange,
-  onSchedule,
-  onCancelScheduledPublish,
+  onPublishNow,
+  onUnpublishNow,
 }: ProductDetailsProps) {
   return (
     <DetailsPanel aria-labelledby="selected-product-title">
@@ -38,15 +40,18 @@ export function ProductDetails({
         product={product}
         scheduleDate={scheduleDate}
         scheduleTime={scheduleTime}
-        onPublish={onPublish}
-        onUnpublish={onUnpublish}
         onScheduleDateChange={onScheduleDateChange}
         onScheduleTimeChange={onScheduleTimeChange}
-        onSchedule={onSchedule}
-        onCancelScheduledPublish={onCancelScheduledPublish}
+        onPublishNow={onPublishNow}
+        onUnpublishNow={onUnpublishNow}
+        actionLoading={actionLoading}
       />
 
-      <PublishingHistory history={product.history} />
+      <PublishingHistory
+        history={product.history}
+        loading={historyLoading}
+        error={historyError}
+      />
     </DetailsPanel>
   )
 }

@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
-  resources :products, only: %i[index show]
+  resources :products, only: %i[index show] do
+    post :publish_now, on: :member
+    post :unpublish_now, on: :member
+  end
   resources :publication_events, only: %i[index]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

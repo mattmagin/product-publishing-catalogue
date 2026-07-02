@@ -1,14 +1,3 @@
-import {
-  Steps as ArkSteps,
-  StepsList,
-  StepsRoot,
-  StepsItem,
-  StepsTrigger,
-  StepsIndicator,
-  StepsSeparator,
-  StepsContent,
-} from '@ark-ui/react/steps'
-// import styles from './steps.module.css'
 import styled from 'styled-components'
 
 const Container = styled.ol`
@@ -64,28 +53,12 @@ const HistoryMeta = styled.div`
   font-size: 12px;
 `
 
-const HistoryBadge = styled.span`
-  border: 1px solid #d9dee8;
-  border-radius: 4px;
-  padding: 1px 5px;
-  background: #f8fafc;
-  color: #344054;
-  font-size: 11px;
-  font-weight: 650;
-`
-
 const HistoryDescription = styled.p`
   margin: 5px 0 0;
   color: #667085;
   font-size: 12px;
   line-height: 1.35;
 `
-
-interface Step {
-  value: string
-  title: string
-  description: string
-}
 
 interface StepsProps {
   items: {
@@ -109,7 +82,6 @@ const Steps: React.FC<StepsProps> = ({
           <div>
             <HistoryMeta>
               <span>{item.title}</span>
-              <HistoryBadge>{item.description}</HistoryBadge>
             </HistoryMeta>
             <HistoryDescription>{item.description}</HistoryDescription>
           </div>
