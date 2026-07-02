@@ -2,6 +2,7 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { ProductDetails } from './Product/ProductDetails'
 import { ProductListTable } from './ProductListTable'
+import { ADMIN_NAV_ITEMS } from './adminNavItems'
 import Dashboard from '@/components/Dashboard'
 import { Container } from '@/components/styled'
 
@@ -9,7 +10,10 @@ const AdminDashboard: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState('')
 
   return (
-    <Dashboard title="Product Publishing Catalogue">
+    <Dashboard
+      title="Product Publishing Catalogue"
+      navItems={ADMIN_NAV_ITEMS}
+    >
       <Content>
         <ProductListTable
           selectedProductId={selectedProductId || null}

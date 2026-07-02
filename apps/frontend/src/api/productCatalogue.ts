@@ -18,12 +18,25 @@ type ProductResponse = {
 
 type PublicationEventResponse = {
   id: number
+  product_id: number
   event_type: string
   from_state: ProductStatus
   to_state: ProductStatus
   triggered_by: 'user' | 'system'
   user_name: string | null
   occurred_at: string
+}
+
+export type PublicationEvent = {
+  id: number
+  productApiId: number
+  eventType: string
+  fromState: ProductStatus
+  toState: ProductStatus
+  triggeredBy: 'user' | 'system'
+  userName: string | null
+  occurredAt: string
+  occurredAtLabel: string
 }
 
 const formatDateTime = (value: string | null) => {
@@ -70,6 +83,20 @@ const mapPublicationEvent = (
   description: eventDescription(event),
 })
 
+const mapPublicationEventRow = (
+  event: PublicationEventResponse,
+): PublicationEvent => ({
+  id: event.id,
+  productApiId: event.product_id,
+  eventType: humanizeEventType(event.event_type),
+  fromState: event.from_state,
+  toState: event.to_state,
+  triggeredBy: event.triggered_by,
+  userName: event.user_name,
+  occurredAt: event.occurred_at,
+  occurredAtLabel: formatDateTime(event.occurred_at) ?? event.occurred_at,
+})
+
 export const productCatalogueApi = {
   async listProducts() {
     const products = await apiClient.get('products').json<ProductResponse[]>()
@@ -86,6 +113,13 @@ export const productCatalogueApi = {
       .json<PublicationEventResponse[]>()
 
     return events.map(mapPublicationEvent)
+  },
+  async listPublicationEvents() {
+    const events = await apiClient
+      .get('publication_events')
+      .json<PublicationEventResponse[]>()
+
+    return events.map(mapPublicationEventRow)
   },
   async publishNow(productApiId: number) {
     const product = await apiClient
