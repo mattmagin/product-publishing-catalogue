@@ -80,7 +80,7 @@ products_fixture = [
     sku: "PROD-1012",
     title: "Bamboo Cutting Board",
     price: 32.99,
-    image_url: "https://images.unsplash.com/photo-1595095787521-500d20e55d0f?auto=format&fit=crop&w=360&q=80",
+    image_url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=360&q=80",
     status: "published"
   },
   {
