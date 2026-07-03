@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import Dashboard from '@/components/Dashboard'
@@ -18,6 +19,8 @@ type ChangelogRow = PublicationEvent & {
 }
 
 export function PublishingChangelog() {
+  const [searchParams] = useSearchParams()
+  const productFilter = searchParams.get('product')
   const products = useProductsStore((state) => state.products)
   const productsLoading = useProductsStore((state) => state.loading)
   const productsError = useProductsStore((state) => state.error)
@@ -38,17 +41,33 @@ export function PublishingChangelog() {
     void loadPublicationEvents()
   }, [loadProducts, loadPublicationEvents])
 
+  const filteredProduct = useMemo(
+    () =>
+      productFilter
+        ? (products.find((product) => product.id === productFilter) ?? null)
+        : null,
+    [productFilter, products],
+  )
+
   const rows = useMemo<ChangelogRow[]>(() => {
     const productsByApiId = new Map(
       products.map((product) => [product.apiId, product]),
     )
 
-    return publicationEvents.map((event) => ({
-      ...event,
-      product: productsByApiId.get(event.productApiId) ?? null,
-      actor: event.triggeredBy === 'system' ? 'System' : (event.userName ?? 'User'),
-    }))
-  }, [products, publicationEvents])
+    return publicationEvents
+      .filter((event) =>
+        productFilter
+          ? filteredProduct != null &&
+            event.productApiId === filteredProduct.apiId
+          : true,
+      )
+      .map((event) => ({
+        ...event,
+        product: productsByApiId.get(event.productApiId) ?? null,
+        actor:
+          event.triggeredBy === 'system' ? 'System' : (event.userName ?? 'User'),
+      }))
+  }, [filteredProduct, productFilter, products, publicationEvents])
 
   const columns = useMemo<DataTableColumn<ChangelogRow>[]>(
     () => [
@@ -131,6 +150,21 @@ export function PublishingChangelog() {
           </ErrorState>
         ) : (
           <>
+            {productFilter ? (
+              <FilterBanner role="status">
+                <span>
+                  Filtered to{' '}
+                  <strong>
+                    {filteredProduct
+                      ? `${filteredProduct.title} / ${filteredProduct.id}`
+                      : productFilter}
+                  </strong>
+                </span>
+                <ClearFilterLink to="/admin/publishing-changelog">
+                  Clear filter
+                </ClearFilterLink>
+              </FilterBanner>
+            ) : null}
             {productsError ? (
               <WarningState role="status">
                 Product details could not be loaded. Showing product ids only.
@@ -198,6 +232,41 @@ const ErrorState = styled.p`
   color: #991b1b;
   padding: 16px;
   font-size: 13px;
+`
+
+const FilterBanner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  padding: 12px 14px;
+  font-size: 13px;
+
+  @media (max-width: 560px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
+
+const ClearFilterLink = styled(Link)`
+  flex: 0 0 auto;
+  color: #0b5cab;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(38, 132, 255, 0.35);
+    outline-offset: 3px;
+  }
 `
 
 const WarningState = styled.p`
