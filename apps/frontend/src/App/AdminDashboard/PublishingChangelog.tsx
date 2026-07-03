@@ -19,7 +19,7 @@ type ChangelogRow = PublicationEvent & {
 }
 
 export function PublishingChangelog() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const productFilter = searchParams.get('product')
   const products = useProductsStore((state) => state.products)
   const productsLoading = useProductsStore((state) => state.loading)
@@ -175,6 +175,11 @@ export function PublishingChangelog() {
               data={rows}
               keyField="id"
               loading={publicationEventsLoading || productsLoading}
+              onRowClick={(row) => {
+                if (!row.product) return
+
+                setSearchParams({ product: row.product.id })
+              }}
               pagination
               defaultPageSize={10}
               pageSizeOptions={[10, 15, 20, 25]}
