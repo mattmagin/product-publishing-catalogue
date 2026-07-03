@@ -539,9 +539,10 @@ These tests prove that the API exposes the catalogue rules correctly and records
 ## 8. Path to Production
 
 ### Next Steps
-**Next 2 Hours**
+**Next 2 Hours (and a bit)**
   - Add filtering to the global publication history view so staff can narrow recent activity by product or event type.
   - Improve the admin UI around cancelling scheduled publishes and explaining when a product already has a pending schedule.
+  - Currently the frontend handles date conversion to our required ISO format, it might be worth transitioning this responsibility to the backend by passing a timezone thorough. This simplifies the frontend logic.
 
 **Next Day**
   - Add scheduled unpublishing.

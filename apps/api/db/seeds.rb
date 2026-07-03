@@ -78,7 +78,7 @@ products_fixture = [
   },
   {
     sku: "PROD-1012",
-    title: "Bamboo Cutting Board",
+    title: "Full Kitchen Reno",
     price: 32.99,
     image_url: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=360&q=80",
     status: "published"

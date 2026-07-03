@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import { Button } from '@chakra-ui/react'
+import { Button, Text } from '@chakra-ui/react'
+import { LuX } from 'react-icons/lu'
 import styled from 'styled-components'
 import type { Product } from '../../../store/products'
-import { CancelScheduledPublishDialog } from './CancelScheduledPublishDialog'
+import { CancelScheduledPublishDialog } from './Dialog/CancelScheduledPublishDialog'
+import Alert from '@/components/Alert'
+
+const Container = styled.div`
+  padding: 18px 20px;
+`
 
 interface ScheduledProductActionProps {
   product: Product
@@ -15,30 +21,39 @@ export const ScheduledProductAction = ({
 }: ScheduledProductActionProps) => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const schedule = {
-    label: 'Scheduled publish',
+    label: 'Scheduled to go live at: ',
     date: product.scheduledPublish,
-    cancelLabel: 'Cancel scheduled publish',
   }
 
   if (!schedule.date) return null
 
   return (
-    <>
-      <ScheduleStatus>
-        <ScheduleDetails>
-          <ScheduleLabel>{schedule.label}</ScheduleLabel>
-          <span>{schedule.date}</span>
-        </ScheduleDetails>
-        <Button
-          type="button"
-          size="xs"
-          variant="outline"
-          disabled={isLoading}
-          onClick={() => setIsCancelDialogOpen(true)}
-        >
-          {isLoading ? 'Cancelling...' : schedule.cancelLabel}
-        </Button>
-      </ScheduleStatus>
+    <Container>
+      <Alert
+        status="warning"
+        title={schedule.label}
+        description={
+          <ScheduleDetails>
+            <Text>{schedule.date}</Text>
+          </ScheduleDetails>
+        }
+        action={
+          <ScheduleActionRow>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              colorPalette="red"
+              disabled={isLoading}
+              onClick={() => setIsCancelDialogOpen(true)}
+              width="100%"
+            >
+              <LuX aria-hidden="true" />
+              {isLoading ? 'Cancelling...' : 'Cancel scheduled publish'}
+            </Button>
+          </ScheduleActionRow>
+        }
+      />
 
       <CancelScheduledPublishDialog
         product={product}
@@ -46,25 +61,24 @@ export const ScheduledProductAction = ({
         isLoading={isLoading}
         onClose={() => setIsCancelDialogOpen(false)}
       />
-    </>
+    </Container>
   )
 }
 
-const ScheduleStatus = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: #475467;
+const ScheduleDetails = styled.div`
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  color: #5b6b85;
   font-size: 13px;
 `
 
-const ScheduleDetails = styled.div`
-  display: grid;
-  gap: 2px;
-`
+const ScheduleActionRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 
-const ScheduleLabel = styled.span`
-  color: #111827;
-  font-weight: 650;
+  @media (max-width: 520px) {
+    justify-content: stretch;
+  }
 `

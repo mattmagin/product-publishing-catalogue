@@ -1,4 +1,4 @@
-import type { Product } from '../../store/products'
+import type { Product } from '../../../store/products'
 import { Image, Stack, Text } from '@chakra-ui/react'
 import getStatusTag from '@/helpers/getStatusTag'
 import Price from '@/components/Price'
@@ -24,7 +24,7 @@ export function ProductSummary({ product }: ProductSummaryProps) {
       <Image
         src={product.imageUrl}
         alt={product.title}
-        h="200px"
+        h="150px"
         fit="contain"
       />
     </Stack>

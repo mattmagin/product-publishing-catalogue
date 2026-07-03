@@ -10,10 +10,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState('')
 
   return (
-    <Dashboard
-      title="Product Publishing Catalogue"
-      navItems={ADMIN_NAV_ITEMS}
-    >
+    <Dashboard title="Product Publishing Catalogue" navItems={ADMIN_NAV_ITEMS}>
       <Content>
         <ProductListTable
           selectedProductId={selectedProductId || null}
@@ -29,6 +26,13 @@ export default AdminDashboard
 
 const Content = styled(Container)`
   display: grid;
-  grid-template-columns: 1fr 350px;
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 24px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
 `

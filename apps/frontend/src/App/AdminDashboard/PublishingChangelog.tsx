@@ -65,20 +65,14 @@ export function PublishingChangelog() {
         ...event,
         product: productsByApiId.get(event.productApiId) ?? null,
         actor:
-          event.triggeredBy === 'system' ? 'System' : (event.userName ?? 'User'),
+          event.triggeredBy === 'system'
+            ? 'System'
+            : (event.userName ?? 'User'),
       }))
   }, [filteredProduct, productFilter, products, publicationEvents])
 
   const columns = useMemo<DataTableColumn<ChangelogRow>[]>(
     () => [
-      {
-        id: 'occurredAt',
-        name: 'Occurred at',
-        selector: (row) => new Date(row.occurredAt).getTime(),
-        sortable: true,
-        cell: (row) => row.occurredAtLabel,
-        width: '18%',
-      },
       {
         id: 'product',
         name: 'Product',
@@ -92,14 +86,30 @@ export function PublishingChangelog() {
             {row.product ? <ProductSku>{row.product.id}</ProductSku> : null}
           </ProductCell>
         ),
-        width: '25%',
+        width: '20%',
+      },
+      {
+        id: 'occurredAt',
+        name: 'Occurred at',
+        selector: (row) => new Date(row.occurredAt).getTime(),
+        sortable: true,
+        cell: (row) => <DateTimeCell value={row.occurredAtLabel} />,
+        width: '15%',
+      },
+      {
+        id: 'scheduledAt',
+        name: 'Scheduled for',
+        selector: (row) => row.scheduledAt ?? '',
+        sortable: true,
+        cell: (row) => <DateTimeCell value={row.scheduledAtLabel} />,
+        width: '15%',
       },
       {
         id: 'eventType',
         name: 'Event',
         selector: (row) => row.eventType,
         sortable: true,
-        width: '15%',
+        width: '12%',
       },
       {
         id: 'fromState',
@@ -107,7 +117,7 @@ export function PublishingChangelog() {
         selector: (row) => row.fromState,
         sortable: true,
         cell: (row) => <StatusTag status={row.fromState} />,
-        width: '10%',
+        width: '9%',
       },
       {
         id: 'toState',
@@ -115,14 +125,14 @@ export function PublishingChangelog() {
         selector: (row) => row.toState,
         sortable: true,
         cell: (row) => <StatusTag status={row.toState} />,
-        width: '10%',
+        width: '9%',
       },
       {
         id: 'actor',
         name: 'Actor',
         selector: (row) => row.actor,
         sortable: true,
-        width: '12%',
+        width: '10%',
       },
       {
         id: 'triggeredBy',
@@ -199,9 +209,25 @@ const humanizeTrigger = (triggeredBy: PublicationEvent['triggeredBy']) =>
 function StatusTag({ status }: { status: ProductStatus }) {
   const label = status.charAt(0).toUpperCase() + status.slice(1)
   const colorPalette =
-    status === 'published' ? 'green' : status === 'scheduled' ? 'yellow' : 'gray'
+    status === 'published'
+      ? 'green'
+      : status === 'scheduled'
+        ? 'yellow'
+        : 'gray'
 
   return <Tag colorPalette={colorPalette}>{label}</Tag>
+}
+
+function DateTimeCell({ value }: { value: string | null }) {
+  if (!value) return '-'
+  const [, date, time] = value.replace(',', '').match(/^(.+?),\s*(.+)$/)
+
+  return (
+    <DateTimeText>
+      <DateLine>{date}</DateLine>
+      {time ? <span>{time}</span> : ''}
+    </DateTimeText>
+  )
 }
 
 const ChangelogPanel = styled.section`
@@ -227,6 +253,17 @@ const ProductTitle = styled.span`
 const ProductSku = styled.span`
   color: #667085;
   font-size: 12px;
+`
+
+const DateTimeText = styled.span`
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.25;
+`
+
+const DateLine = styled.span`
+  white-space: nowrap;
 `
 
 const ErrorState = styled.p`

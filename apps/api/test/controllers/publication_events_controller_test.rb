@@ -76,6 +76,45 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
     assert_not response_event.key?("user")
   end
 
+  test "index includes the scheduled publish time for schedule events" do
+    product = create_product(sku: "PROD-1001")
+    user = create_user
+    scheduled_at = Time.zone.local(2026, 7, 3, 10, 30, 0)
+    create_schedule(product:, user:, scheduled_at:)
+    create_publication_event(product:, user:)
+
+    get publication_events_url(product_id: product.id)
+
+    assert_response :success
+
+    response_event = response.parsed_body.first
+    assert_equal scheduled_at.to_i, Time.zone.parse(response_event.fetch("scheduled_at")).to_i
+  end
+
+  test "index includes the scheduled publish time for executed scheduled publishes" do
+    product = create_product(sku: "PROD-1001")
+    user = create_user
+    scheduled_at = Time.zone.local(2026, 7, 3, 10, 30, 0)
+    schedule = create_schedule(product:, user:, scheduled_at:)
+    schedule.update!(status: "executed", executed_at: scheduled_at)
+    create_publication_event(
+      product:,
+      event_type: "published",
+      from_state: "scheduled",
+      to_state: "published",
+      triggered_by: "system",
+      user: nil,
+      occurred_at: scheduled_at + 1.minute,
+    )
+
+    get publication_events_url(product_id: product.id)
+
+    assert_response :success
+
+    response_event = response.parsed_body.first
+    assert_equal scheduled_at.to_i, Time.zone.parse(response_event.fetch("scheduled_at")).to_i
+  end
+
   private
 
   def create_product(attributes = {})
@@ -95,6 +134,14 @@ class PublicationEventsControllerTest < ActionDispatch::IntegrationTest
         name: "Matt Magin",
         email: "matt@magin.com"
       }.merge(attributes),
+    )
+  end
+
+  def create_schedule(product:, user:, scheduled_at:)
+    product.product_schedules.create!(
+      action: "publish",
+      scheduled_at:,
+      created_by: user,
     )
   end
 

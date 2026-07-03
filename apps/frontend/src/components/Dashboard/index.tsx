@@ -23,9 +23,23 @@ const Dashboard: React.FC<LayoutProps> = ({
   children,
 }) => {
   return (
-    <Box minH="100vh" bg="gray.50">
+    <Box
+      h="100vh"
+      bg="gray.50"
+      display="flex"
+      flexDirection="column"
+      overflow="hidden"
+    >
       <Header />
-      <Box h="100%" p="6">
+      <Box
+        as="main"
+        display="flex"
+        flex="1"
+        flexDirection="column"
+        minH="0"
+        overflow="hidden"
+        p="6"
+      >
         {navItems.length > 0 ? (
           <AdminNav aria-label="Admin navigation">
             {navItems.map((item) => (
@@ -40,13 +54,7 @@ const Dashboard: React.FC<LayoutProps> = ({
             ))}
           </AdminNav>
         ) : null}
-        <Text
-          as="h1"
-          mb="5"
-          color="#111827"
-          fontSize="xl"
-          fontWeight="700"
-        >
+        <Text as="h1" mb="5" color="#111827" fontSize="xl" fontWeight="700">
           {title}
         </Text>
         {children}
