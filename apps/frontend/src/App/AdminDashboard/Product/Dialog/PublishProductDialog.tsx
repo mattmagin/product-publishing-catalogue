@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Button } from '@chakra-ui/react'
 import styled from 'styled-components'
 import Dialog from '@/components/Dialog'
-import { ProductScheduleForm } from '../ProductScheduleForm'
-import { scheduleInputToIso } from '../productScheduleDateTime'
-import { useProductsStore, type Product } from '../../../store/products'
-import { defaultScheduleValues } from './productActionScheduleDefaults'
-import { errorMessage, showProductActionToast } from './productActionToast'
+import { ProductScheduleForm } from '../../ProductScheduleForm'
+import { scheduleInputToIso } from '../../productScheduleDateTime'
+import { useProductsStore, type Product } from '@/store/products'
+import { defaultScheduleValues } from '../productActionScheduleDefaults'
+import { errorMessage, showProductActionToast } from '../productActionToast'
 
 interface PublishProductDialogProps {
   product: Product

@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { apiErrorMessage } from '../api/client'
-import { productCatalogueApi } from '../api/productCatalogue'
+import {
+  productCatalogueApi,
+  type PublicationEvent,
+} from '../api/productCatalogue'
 
 export type ProductStatus = 'draft' | 'scheduled' | 'published'
 
@@ -24,12 +27,16 @@ export type Product = {
 
 type ProductStoreState = {
   products: Product[]
+  publicationEvents: PublicationEvent[]
   loading: boolean
   error: string | null
+  publicationEventsLoading: boolean
+  publicationEventsError: string | null
   actionLoadingByProductId: Record<string, boolean>
   historyLoadingByProductId: Record<string, boolean>
   historyErrorByProductId: Record<string, string | null>
   loadProducts: () => Promise<void>
+  loadPublicationEvents: () => Promise<void>
   loadProductHistory: (product: Product) => Promise<void>
   publishNow: (product: Product) => Promise<void>
   unpublishNow: (product: Product) => Promise<void>
@@ -39,8 +46,11 @@ type ProductStoreState = {
 
 export const useProductsStore = create<ProductStoreState>()((set, get) => ({
   products: [],
+  publicationEvents: [],
   loading: false,
   error: null,
+  publicationEventsLoading: false,
+  publicationEventsError: null,
   actionLoadingByProductId: {},
   historyLoadingByProductId: {},
   historyErrorByProductId: {},
@@ -59,6 +69,24 @@ export const useProductsStore = create<ProductStoreState>()((set, get) => ({
         products: [],
         loading: false,
         error: await apiErrorMessage(error),
+      })
+    }
+  },
+  loadPublicationEvents: async () => {
+    set({ publicationEventsLoading: true, publicationEventsError: null })
+
+    try {
+      const publicationEvents = await productCatalogueApi.listPublicationEvents()
+      set({
+        publicationEvents,
+        publicationEventsLoading: false,
+        publicationEventsError: null,
+      })
+    } catch (error) {
+      set({
+        publicationEvents: [],
+        publicationEventsLoading: false,
+        publicationEventsError: await apiErrorMessage(error),
       })
     }
   },

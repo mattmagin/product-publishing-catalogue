@@ -15,7 +15,7 @@
 - Expose a simple catalogue view that demonstrates which products are currently visible to customers.
 
 ### Key Design Goals
-- Make publication state easy for operators to see, understand, and manage.
+- Make publication state easy for staff members to see, understand, and manage.
 - Support scheduled publishing without requiring manual action at the required publish time.
 - Keep publication rules in one place so manual and scheduled transitions behave consistently.
 - Provide a clear, append-only audit trail for publication-related changes.
@@ -34,6 +34,61 @@
 - Only one active scheduled publish is supported per product.
 
 ## 2. System Architecture
+
+### Architecture Diagram
+
+The system is a pnpm monorepo (`apps/api`, `apps/frontend`) orchestrated for local development by Docker Compose. A React single-page app talks to a Rails API, which persists to PostgreSQL. A separate Solid Queue worker process runs the recurring job that applies due scheduled publishes, sharing the same codebase and database as the API.
+
+```mermaid
+flowchart TB
+    subgraph browser["Browser — React 19 SPA (TypeScript)"]
+        direction TB
+        router["React Router<br/>Admin Dashboard + Storefront"]
+        chakra["Chakra UI"]
+        zustand["Zustand store<br/>(products, publication events)"]
+        ky["Ky HTTP client"]
+        router --- chakra
+        router --- zustand
+        zustand --- ky
+    end
+
+    subgraph vite["Vite dev server :5173"]
+        proxy["/api proxy → :3000"]
+    end
+
+    subgraph compose["Docker Compose"]
+        direction TB
+        subgraph api["api container — Rails API on Puma :3000"]
+            direction TB
+            routes["Routes"]
+            controllers["ProductsController<br/>PublicationEventsController"]
+            models["Models: Product, ProductSchedule,<br/>ProductPublicationEvent, User"]
+            routes --> controllers --> models
+        end
+
+        subgraph jobs["jobs container — bin/jobs"]
+            solidqueue["Solid Queue<br/>worker + recurring scheduler"]
+            duejob["ExecuteDueProductSchedulesJob<br/>(every 1 minute)"]
+            solidqueue --> duejob
+        end
+
+        subgraph db["db container — PostgreSQL 18"]
+            appdata[("products<br/>product_schedules<br/>product_publication_events")]
+            sqdata[("solid_queue_* tables")]
+        end
+    end
+
+    ky -->|HTTP /api/*| proxy
+    proxy -->|HTTP| routes
+    models -->|Active Record| appdata
+    duejob -->|publish due schedules,<br/>write events| appdata
+    solidqueue <-->|queue + recurring state| sqdata
+```
+
+Notes:
+- In local development the browser loads the SPA from the Vite dev server (`:5173`), which proxies `/api` requests to the Rails API on `:3000`. `VITE_API_BASE_URL` can point the client directly at the API instead.
+- The `api` and `jobs` containers are built from the same image and share the same database; only their entrypoints differ (`bin/rails server` vs. `bin/jobs`).
+- Solid Queue stores both its job queue and its recurring-task schedule in PostgreSQL, so no separate broker (e.g. Redis) is required.
 
 ### Technology Stack
 
@@ -68,7 +123,7 @@ The catalogue is centred around a `Product` model. Products store the core catal
 - `sku`, `title`, `price`, and `image_url` are required.
 - `sku` is unique.
 - `price` must be non-negative.
-- `Product.draft`, `Product.scheduled`, and `Product.published` scopes expose the same operator-facing states used by the UI.
+- `Product.draft`, `Product.scheduled`, and `Product.published` scopes expose the same staff-facing states used by the UI.
 - `scheduled_publish_at` is exposed as a computed value from the pending publish schedule. It is not stored on the `products` table.
 
 #### Derived Publication States
@@ -92,7 +147,7 @@ Trade-offs:
 | `published`   | Yes              | `published_at` is present                                      |
 
 ##### Status Transitions
-Although publication state is derived from timestamps rather than stored in a `status` column, the system still enforces valid operator-facing transitions.
+Although publication state is derived from timestamps rather than stored in a `status` column, the system still enforces valid staff-facing transitions.
 
 | From        | To          | Trigger                    | Field Changes                                                                        | Notes                                 |
 | ----------- | ----------- | -------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------- |
@@ -120,7 +175,7 @@ Although publication state is derived from timestamps rather than stored in a `s
 | `status`        | enum/text | `pending`, `executed`, or `cancelled`             |
 | `scheduled_at`  | datetime  | When the action should be applied                 |
 | `executed_at`   | datetime  | Set when the schedule is successfully executed    |
-| `created_by_id` | integer   | Operator attribution for who created the schedule |
+| `created_by_id` | integer   | Staff attribution for who created the schedule |
 | `created_at`    | datetime  | Rails-managed timestamp                           |
 | `updated_at`    | datetime  | Rails-managed timestamp                           |
 
@@ -140,7 +195,7 @@ Although publication state is derived from timestamps rather than stored in a `s
 | `ProductSchedule belongs_to :product` | Each schedule belongs to a product                      |
 
 #### Notes
-- Executed and cancelled schedules are retained instead of deleted (soft-delete). This gives operators a clearer trail of what was planned, what ran, and what was cancelled.
+- Executed and cancelled schedules are retained instead of deleted (soft-delete). This gives staff members a clearer trail of what was planned, what ran, and what was cancelled.
 
 ### ProductPublicationEvent
 `ProductPublicationEvent` stores an append-only history of publication-related changes to a product. Every time a product's publication state changes, including scheduling, a row is added to this table.
@@ -153,7 +208,7 @@ Although publication state is derived from timestamps rather than stored in a `s
 | `from_state`   | text      | Derived state before the change, captured at event time                      |
 | `to_state`     | text      | Derived state after the change, captured at event time                       |
 | `triggered_by` | enum/text | Source of the event: `user` or `system`                                      |
-| `user_id`      | integer   | Nullable operator attribution for user-triggered events                      |
+| `user_id`      | integer   | Nullable staff attribution for user-triggered events                      |
 | `occurred_at`  | datetime  | When the event occurred                                                      |
 | `created_at`   | datetime  | Rails-managed timestamp for when the event was created                       |
 | `updated_at`   | datetime  | Rails-managed timestamp; retained by Rails but not used for business meaning |
@@ -177,7 +232,7 @@ Although publication state is derived from timestamps rather than stored in a `s
 #### Notes
 - `ProductPublicationEvent` is intended to be append-only. The MVP documents this rule in the model but does not enforce it with database triggers.
 - The model is purpose-built for publication audit history rather than generic product versioning.
-- `from_state` and `to_state` store the derived operator-facing state as it was interpreted when the event was recorded.
+- `from_state` and `to_state` store the derived staff-facing state as it was interpreted when the event was recorded.
 	- Keeping `from_state` and `to_state` means:
 		  - the audit event describes what changed at the time it changed;
 		  - the historical event preserves its original interpretation if derivation rules change later.
@@ -207,7 +262,7 @@ Although publication state is derived from timestamps rather than stored in a `s
 
 ### `GET /products`
 Returns products. Passing `status=published` returns only published products for the customer view, omitting `status` returns all products for the admin workflow.
-- the admin UI calls `GET /products` without a status filter so operators can see draft, scheduled, and published products;
+- the admin UI calls `GET /products` without a status filter so staff members can see draft, scheduled, and published products;
 - the customer catalogue calls `GET /products?status=published` so customers only see currently visible products.
 
 #### Request Shape
@@ -419,7 +474,7 @@ Trade-offs:
 - This version does not model partial failure notifications or retry dashboards.
 
 ### Scheduled Publish Flow
-1. An operator schedules a product by calling `POST /products/:id/publish_later`.
+1. An staff schedules a product by calling `POST /products/:id/publish_later`.
 2. The API validates that the product exists, is not published, does not already have a pending publish schedule, and has a future `scheduled_at`.
 3. A pending `ProductSchedule` is created.
 4. A `publish_scheduled` event is recorded.
@@ -431,7 +486,7 @@ Trade-offs:
 ### Time Handling
 - API timestamps use ISO 8601.
 - Persisted timestamps are stored in UTC.
-- Frontent display can convert timestamps to the operator's local timezone.
+- Frontent display can convert timestamps to the staff's local timezone.
 	- Likely for future iterations we should convert this on the backend 
 - The backend remains the source of truth for whether a schedule is valid and due.
 
@@ -443,8 +498,60 @@ Trade-offs:
 
 ## 5. Data Flow and Key Scenarios
 
+### User Event Flow
+
+The diagram below traces the key staff- and customer-driven events through the SPA, the Rails API, and PostgreSQL, plus the automatic scheduler flow. Each user action that changes publication state also appends a `ProductPublicationEvent`.
+
+```mermaid
+sequenceDiagram
+    actor Staff
+    actor Customer
+    participant UI as React SPA
+    participant API as Rails API
+    participant DB as PostgreSQL
+    participant Job as Solid Queue Scheduler
+
+    Note over Staff,DB: Publish Now
+    Staff->>UI: Click "Publish"
+    UI->>API: POST /products/:id/publish
+    API->>DB: Set published_at, cancel any pending schedule
+    API->>DB: Insert "published" event (triggered_by: user)
+    API-->>UI: 200 product (status: published)
+
+    Note over Staff,DB: Schedule Publish
+    Staff->>UI: Choose a future publish time
+    UI->>API: POST /products/:id/publish_later { scheduled_at }
+    API->>DB: Create pending ProductSchedule
+    API->>DB: Insert "publish_scheduled" event (user)
+    API-->>UI: 200 product (status: scheduled)
+
+    Note over Job,DB: Scheduled Time Reached (automatic, every 1 min)
+    Job->>DB: Load due pending schedules
+    Job->>DB: Set published_at, mark schedule executed
+    Job->>DB: Insert "published" event (triggered_by: system)
+
+    Note over Staff,DB: Cancel Scheduled Publish
+    Staff->>UI: Click "Cancel schedule"
+    UI->>API: DELETE /products/:id/publish_later
+    API->>DB: Mark pending schedule cancelled
+    API->>DB: Insert "schedule_cancelled" event (user)
+    API-->>UI: 200 product (status: draft)
+
+    Note over Customer,DB: Fetch Customer Catalogue
+    Customer->>UI: Open storefront
+    UI->>API: GET /products?status=published
+    API->>DB: Query published products
+    API-->>UI: 200 [ published products ]
+
+    Note over Staff,DB: View Product History
+    Staff->>UI: Open a product's history
+    UI->>API: GET /publication_events?product_id=:id
+    API->>DB: Query events (newest first)
+    API-->>UI: 200 [ events ]
+```
+
 **Publish Now**
-1. Operator chooses to publish a product immediately.
+1. Staff chooses to publish a product immediately.
 2. API validates that the product exists and is not already published.
 3. API sets `published_at`.
 4. API clears any scheduled publish time.
@@ -452,7 +559,7 @@ Trade-offs:
 6. Customer catalogue includes the product.
 
 **Schedule Publish**
-1. Operator chooses a future publish time.
+1. Staff chooses a future publish time.
 2. API validates the input and product state.
 3. API creates a pending `ProductSchedule`.
 4. API records a `publish_scheduled` event.
@@ -465,7 +572,7 @@ Trade-offs:
 4. Job records a `published` event with `triggered_by = system`.
 
 **Cancel Scheduled Publish**
-1. Operator cancels a scheduled publish.
+1. Staff cancels a scheduled publish.
 2. API validates that the product is currently scheduled.
 3. API marks the pending schedule as `cancelled`.
 4. API records a `schedule_cancelled` event.
@@ -476,7 +583,7 @@ Trade-offs:
 3. The catalogue does not live-update automatically; users see changes when the page refreshes or the app refetches data.
 
 **View Product History**
-1. Operator opens a product's publication history.
+1. Staff opens a product's publication history.
 2. UI calls `GET /publication_events?product_id=:id`.
 3. API returns publication events in reverse chronological order.
 
@@ -505,7 +612,7 @@ These tests sit close to the domain logic because derived state, schedule eligib
 - Due schedules that are no longer legal are cancelled and recorded as system cancellations.
 - A failing schedule row does not stop later due schedules from being processed.
 
-The scheduled job gets more coverage than standard model validations because it owns the time-based behaviour, and failure isolation that operators would rely on during a launch.
+The scheduled job gets more coverage than standard model validations because it owns the time-based behaviour, and failure isolation that staff members would rely on during a launch.
 
 ### API Tests
 - Product listing exposes derived status and schedule fields needed by the UI.
@@ -539,9 +646,10 @@ These tests prove that the API exposes the catalogue rules correctly and records
 ## 8. Path to Production
 
 ### Next Steps
-**Next 2 Hours**
+**Next 2 Hours (and a bit)**
   - Add filtering to the global publication history view so staff can narrow recent activity by product or event type.
   - Improve the admin UI around cancelling scheduled publishes and explaining when a product already has a pending schedule.
+  - Currently the frontend handles date conversion to our required ISO format, it might be worth transitioning this responsibility to the backend by passing a timezone thorough. This simplifies the frontend logic.
 
 **Next Day**
   - Add scheduled unpublishing.

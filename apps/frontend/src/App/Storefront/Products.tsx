@@ -7,9 +7,11 @@ const Products = () => {
   const { error, loading, products } = useProducts()
   const hasProducts = products.length > 0
 
-  if (error) return <Alert status="error">Products could not be loaded.</Alert>
-  if (loading) return <Alert>Loading products...</Alert>
-  if (!hasProducts) return <Alert>No products are available right now.</Alert>
+  if (error)
+    return <Alert status="error" title="Products could not be loaded." />
+  if (loading) return <Alert title="Loading products..." />
+  if (!hasProducts)
+    return <Alert title="No products are available right now." />
 
   return (
     <Grid

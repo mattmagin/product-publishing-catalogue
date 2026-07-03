@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Button } from '@chakra-ui/react'
+import { Button, Flex, HStack } from '@chakra-ui/react'
 import { useProductsStore, type Product } from '../../../store/products'
-import { ProductActionLayout } from './ProductActionLayout'
-import { PublishProductDialog } from './PublishProductDialog'
+import { PublishProductDialog } from './Dialog/PublishProductDialog'
 import { ScheduledProductAction } from './ScheduledProductAction'
-import { UnpublishProductDialog } from './UnpublishProductDialog'
+import { UnpublishProductDialog } from './Dialog/UnpublishProductDialog'
 
 interface ProductActionsProps {
   product: Product
 }
 
+// TODO: There is too much duplication in this file
 export const ProductActions = ({ product }: ProductActionsProps) => {
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false)
   const [isUnpublishDialogOpen, setIsUnpublishDialogOpen] = useState(false)
@@ -20,15 +20,13 @@ export const ProductActions = ({ product }: ProductActionsProps) => {
 
   if (hasSchedule) {
     return (
-      <ProductActionLayout>
-        <ScheduledProductAction product={product} isLoading={actionLoading} />
-      </ProductActionLayout>
+      <ScheduledProductAction product={product} isLoading={actionLoading} />
     )
   }
 
   if (product.status === 'published') {
     return (
-      <ProductActionLayout>
+      <HStack align="center" px="10%">
         <Button
           type="button"
           variant="outline"
@@ -45,12 +43,12 @@ export const ProductActions = ({ product }: ProductActionsProps) => {
           isLoading={actionLoading}
           onClose={() => setIsUnpublishDialogOpen(false)}
         />
-      </ProductActionLayout>
+      </HStack>
     )
   }
 
   return (
-    <ProductActionLayout>
+    <HStack align="center" px="10%">
       <Button
         type="button"
         colorPalette="green"
@@ -66,6 +64,6 @@ export const ProductActions = ({ product }: ProductActionsProps) => {
         isLoading={actionLoading}
         onClose={() => setIsPublishDialogOpen(false)}
       />
-    </ProductActionLayout>
+    </HStack>
   )
 }

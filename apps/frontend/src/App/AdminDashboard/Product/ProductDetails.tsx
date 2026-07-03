@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { useProductsStore } from '@/store/products'
 import { ProductActions } from './ProductActions'
 import { PublishingHistory } from '../PublishingHistory'
-import { ProductSummary } from '../ProductSummary'
+import { ProductSummary } from './ProductSummary'
 
 type ProductDetailsProps = {
   selectedProductId: string | null
@@ -36,7 +36,8 @@ export function ProductDetails({ selectedProductId }: ProductDetailsProps) {
 }
 
 const DetailsPanel = styled.aside`
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
   border: 1px solid #d9dee8;
   border-radius: 4px;
   background: #ffffff;
@@ -51,6 +52,8 @@ const DetailsSection = styled.section`
 `
 
 const EmptyDetails = styled.aside`
+  min-height: 0;
+  overflow-y: auto;
   border: 1px solid #d9dee8;
   border-radius: 4px;
   padding: 18px 20px;

@@ -3,6 +3,7 @@ const isoDatePattern = /^(\d{4})-(\d{2})-(\d{2})/
 export const dateValueToDateInput = (dateValue: { toString: () => string }) =>
   dateValue.toString().slice(0, 10)
 
+// TODO: I think the backed should handle this conversion by accepting
 export const scheduleInputToIso = (
   scheduleDate: string,
   scheduleTime: string,

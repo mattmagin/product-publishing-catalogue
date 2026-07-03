@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { useProductsStore } from '../../store/products'
 import SectionHeading from '@/components/SectionHeading'
@@ -28,6 +29,8 @@ export function PublishingHistory({ productId }: PublishingHistoryProps) {
       description,
     }),
   )
+  const visibleHistoryItems = historyItems.slice(0, 3)
+  const hasMoreHistoryItems = historyItems.length > visibleHistoryItems.length
 
   useEffect(() => {
     if (!product || product.historyLoaded) return
@@ -45,7 +48,16 @@ export function PublishingHistory({ productId }: PublishingHistoryProps) {
           Publishing history could not be loaded. {error}
         </HistoryError>
       ) : historyItems.length > 0 ? (
-        <Steps items={historyItems} />
+        <>
+          <Steps items={visibleHistoryItems} />
+          {hasMoreHistoryItems ? (
+            <ShowMoreLink
+              to={`/admin/publishing-changelog?product=${encodeURIComponent(productId)}`}
+            >
+              Show more
+            </ShowMoreLink>
+          ) : null}
+        </>
       ) : (
         <HistoryState>No publishing history has been recorded.</HistoryState>
       )}
@@ -71,4 +83,22 @@ const HistoryError = styled.p`
   margin: 0;
   color: #991b1b;
   font-size: 13px;
+`
+
+const ShowMoreLink = styled(Link)`
+  display: inline-flex;
+  margin-top: 12px;
+  color: #0b5cab;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(38, 132, 255, 0.35);
+    outline-offset: 3px;
+  }
 `

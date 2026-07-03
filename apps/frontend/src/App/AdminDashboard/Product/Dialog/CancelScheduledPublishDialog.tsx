@@ -1,6 +1,6 @@
 import Dialog from '@/components/Dialog'
-import { useProductsStore, type Product } from '../../../store/products'
-import { errorMessage, showProductActionToast } from './productActionToast'
+import { useProductsStore, type Product } from '@/store/products'
+import { errorMessage, showProductActionToast } from '../productActionToast'
 
 interface CancelScheduledPublishDialogProps {
   product: Product
