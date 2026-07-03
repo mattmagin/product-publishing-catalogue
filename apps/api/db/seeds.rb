@@ -192,7 +192,7 @@ products_fixture.each_with_index do |fixture_product, index|
     status: ProductSchedule::STATUSES[:pending],
   ) do |schedule|
     schedule.scheduled_at = (index + 1).days.from_now
-    schedule.created_by = user
+    schedule.created_by = seed_user
   end
 end
 
