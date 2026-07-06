@@ -58,6 +58,7 @@ export function ProductScheduleForm({
           closeOnSelect={false}
           positioning={{ sameWidth: true }}
           onValueChange={handleDateChange}
+          timeZone="Australia/Brisbane"
         >
           <DatePicker.Label>{label}</DatePicker.Label>
           <DatePicker.Control>
